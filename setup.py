@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 setup(
     name="acemeta",
-    version="dev",
+    version="0.0",
     packages=find_packages(),
-    install_requires=[],  # Hier können Abhängigkeiten aufgelistet werden
+    install_requires=["datetime"],  # Hier können Abhängigkeiten aufgelistet werden
     author="Annhilati",
     #author_email="Ihre Email",
     #description="Eine kurze Beschreibung Ihres Pakets",
