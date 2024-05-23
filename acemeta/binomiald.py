@@ -6,6 +6,9 @@ def binominalD(n: int, k: int, p: float) -> float:
     return binominalC(n, k) * (p ** k) * ((1-p) ** (n - k))
 
 def binomialDF(n: int, k: int, p: float, mode: str) -> float:
+    """
+    Calculates a probability using the binomial distribution function
+    """
 
     def bdf_max(n: int, k_max: int, p: float) -> float:
         out: float = 0
@@ -28,4 +31,4 @@ def binomialDF(n: int, k: int, p: float, mode: str) -> float:
         case "lessthen":
             return bdf_max(n, k - 1, p)
         case _:
-            raise ValueError("mode must be one of \"exact\", \"max\", \"min\", \"morethen\" or \"lessthen\"") 
+            raise ValueError("mode in binomialDF() must be one of \"exact\", \"max\", \"min\", \"morethen\" or \"lessthen\"") 
