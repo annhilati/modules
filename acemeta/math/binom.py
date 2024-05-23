@@ -1,13 +1,19 @@
-from acemeta.numbers import factorial
+from acemeta.math.numbers import factorial
 
 def binominalC(n: int, k: int) -> float:
     return factorial(n) / (factorial(k) * factorial(n - k))
 def binominalD(n: int, k: int, p: float) -> float:
     return binominalC(n, k) * (p ** k) * ((1-p) ** (n - k))
 
-def binomialDF(n: int, k: int, p: float, mode: str) -> float:
+def binomialDF(n: int, k: int, p: float, mode: str = "exact") -> float:
     """
     Calculates a probability using the binomial distribution function
+
+    n: Number of Bernoulli experiments performed
+    k: Number of succesfull experiments
+    p: The probability of success of a single experiment
+    mode: TODO
+        "exact", "max", "min", "morethen" or "lessthen"
     """
 
     def bdf_max(n: int, k_max: int, p: float) -> float:
