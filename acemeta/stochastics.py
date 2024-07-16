@@ -1,24 +1,29 @@
-from acemeta.math.numbers import factorial
+"""
+Module for stochastics
+"""
 
-def binominalC(n: int, k: int) -> float:
-    """
-    Calculates a binomial coefficient
-    """
-    return factorial(n) / (factorial(k) * factorial(n - k))
+__all__ = ["binomialDF", "chance"]
+
+from random import randint
 
 def binomialDF(n: int, k: int, p: float, mode: str = "exact") -> float:
     """
     Calculates a probability using the binomial distribution function
 
-    n: Number of Bernoulli experiments performed
-    k: Number of succesfull experiments
-    p: The probability of success of a single experiment
-    mode: TODO
-        "exact", "max", "min", "morethen" or "lessthen"
+    - n: Number of Bernoulli experiments performed
+    - k: Number of succesfull experiments
+    - p: The probability of success of a single experiment
+    - mode: "exact", "max", "min", "morethen" or "lessthen"
     """
+    def factorial(n: int) -> int:
+        out: int = 1
+        for i in range(1, n + 1):
+            out *= i
+        return out
+    def binominalC(n: int, k: int) -> float:
+        return factorial(n) / (factorial(k) * factorial(n - k))
     def binominalD(n: int, k: int, p: float) -> float:
         return binominalC(n, k) * (p ** k) * ((1-p) ** (n - k))
-
     def bdf_max(n: int, k_max: int, p: float) -> float:
         out: float = 0
         for i in range(0, k_max + 1):
@@ -40,4 +45,13 @@ def binomialDF(n: int, k: int, p: float, mode: str = "exact") -> float:
         case "lessthen":
             return bdf_max(n, k - 1, p)
         case _:
-            raise ValueError("mode in binomialDF() must be one of \"exact\", \"max\", \"min\", \"morethen\" or \"lessthen\"") 
+            raise SyntaxError("mode in binomialDF() must be one of \"exact\", \"max\", \"min\", \"morethen\" or \"lessthen\"") 
+        
+def chance(probability: float) -> bool:
+    """
+    Returns a True or False, based on the given probability
+    """
+    if randint(1, 10000000) <= probability * 10000000:
+        return True
+    else:
+        return False
