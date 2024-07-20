@@ -1,6 +1,12 @@
 def factorial(n: int) -> int:
     """
     Calculates the factorial of a number
+
+    #### Arguments:
+        n (int): A natural number
+
+    #### Returns:
+        int: The factorial of n
     """
     out: int = 1
     for i in range(1, n + 1):
@@ -10,6 +16,12 @@ def factorial(n: int) -> int:
 def isPrime(n: int) -> bool:
     """
     Checks if a number is a prime
+
+    #### Arguments:
+        n (int): A natural number
+
+    #### Returns:
+        bool: Whether n is a prime number or not
     """
     if n < 2:
         return False

@@ -10,10 +10,14 @@ def binomialDF(n: int, k: int, p: float, mode: str = "exact") -> float:
     """
     Calculates a probability using the binomial distribution function
 
-    - n: Number of Bernoulli experiments performed
-    - k: Number of succesfull experiments
-    - p: The probability of success of a single experiment
-    - mode: "exact", "max", "min", "morethen" or "lessthen"
+    #### Arguments
+        n (int): Number of Bernoulli experiments performed
+        k (int): Number of succesfull experiments
+        p (float): The probability of success of a single experiment
+        mode: "exact", "max", "min", "morethen" or "lessthen"
+
+    #### Returns
+        float: The requested probability
     """
     def factorial(n: int) -> int:
         out: int = 1
@@ -46,12 +50,3 @@ def binomialDF(n: int, k: int, p: float, mode: str = "exact") -> float:
             return bdf_max(n, k - 1, p)
         case _:
             raise SyntaxError("mode in binomialDF() must be one of \"exact\", \"max\", \"min\", \"morethen\" or \"lessthen\"") 
-        
-def chance(probability: float) -> bool:
-    """
-    Returns a True or False, based on the given probability
-    """
-    if randint(1, 10000000) <= probability * 10000000:
-        return True
-    else:
-        return False
