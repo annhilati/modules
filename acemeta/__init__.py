@@ -1,5 +1,5 @@
 """
-Main module
+## Library for typical workflows
 """
 
 from .Stochastics import binomialDF
