@@ -8,14 +8,14 @@ class Webhook():
         url (str): The webhook url to send messages through 
 
     #### Methods:
-        send(): 
+        send(): Sends a message through the webhook
     """
     def __init__(self, url: str):
         self._url = url
 
     def send(self, msg: str):
         """
-        Sends a message through a webhook
+        Sends a message through the webhook
 
         #### Arguments
             msg (str): 

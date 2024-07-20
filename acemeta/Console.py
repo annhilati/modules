@@ -1,3 +1,26 @@
+from datetime import datetime
+
+class Time():
+    """
+    A collection of functions that format a datetime or return the current
+
+    #### Functions:
+        date(): Returns a date in an european format
+        time(): Returns a time in an european format
+        clock(): Returns a time with second precision
+    """
+    def date(datetime: datetime = datetime.now()) -> str:
+        "Returns a date in an european format"
+        return (datetime).strftime("%d.%m.%Y")
+
+    def time(datetime: datetime = datetime.now()) -> str:
+        "Returns a time in an european format"
+        return (datetime).strftime("%H:%M")
+    
+    def clock(datetime: datetime = datetime.now()) -> str:
+        "Returns a time in an european format"
+        return (datetime).strftime("%H:%M:%S")
+
 class Color():
     """
     A collection of constants that change the following text color
@@ -16,6 +39,30 @@ class Color():
     purple = "\033[38;2;128;0;128m"  # Purple (Hex: #800080)
     black = "\033[30m"
     r = "\033[0m"  # Reset
+
+def log(msg: str, color: str = None) -> None:
+    """
+    Logs a message to the console
+
+    #### Arguments:
+        msg (str): The text that should be printed
+        color (str): The color the text is to be displayed in
+            red, orange, yellow, green, blue, aqua, magenta, purple, black
+    """
+    cr = "\033[0m"
+    match color:
+        case None: cc = Color.r
+        case "red": cc = Color.red
+        case "orange": cc = Color.orange
+        case "yellow":cc = Color.yellow
+        case "green": cc = Color.green
+        case "blue": cc = Color.blue
+        case "aqua": cc = Color.aqua
+        case "magenta": cc = Color.magenta
+        case "purple": cc = Color.purple
+        case "black": cc = Color.black            
+        case _: raise SyntaxError(f"Unsupported color: {color}")
+    print(f"[{Time.clock()}] " + cc + msg + cr)
 
 class FancyConsole():
     """
