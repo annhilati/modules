@@ -75,8 +75,8 @@ class Repository():
                 'Content-Type': 'application/json'
             }
             data = {
-            'message': msg,
-            'content': content_base64
+                'message': msg,
+                'content': content_base64
             }
         
             response = WEB.put(target, json=data, headers=headers)
