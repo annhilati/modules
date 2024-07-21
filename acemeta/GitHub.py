@@ -44,15 +44,6 @@ class Repository():
         else: response.raise_for_status()
 
     def _fileSha(self, file: str) -> str:
-        """
-        Retrieves the SHA of a file in the repository
-
-        #### Arguments:
-            file (str): Path of the file whose SHA is to be retrieved
-
-        #### Returns:
-            str: The SHA of the file
-        """
         target = f"{self._url}/contents/{file}"
         headers = {
             'Authorization': f'token {self.token}',
