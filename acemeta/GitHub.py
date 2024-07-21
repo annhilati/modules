@@ -60,7 +60,7 @@ class Repository():
                 Carries a response.status_code attribute containing the HTTP status code
         """
 
-        if Repository.exists(directory) and overwrite == False:
+        if self.exists(directory=directory) and overwrite == False:
             raise FileExistsError(f"File '{self.repository}/{directory}' already exists.")
         else: 
         
