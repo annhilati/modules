@@ -6,7 +6,7 @@ with open("README.md", 'r', encoding='utf-8') as f:
 
 setup(
     name='acemeta',  # Name des Pakets
-    version='0.2.4',  # Version des Pakets
+    version='0.2.6',  # Version des Pakets
     author='Annhilati',  # Autor
     #author_email='your.email@example.com',  # E-Mail des Autors
     description='Library for typical workflows',  # Kurze Beschreibung

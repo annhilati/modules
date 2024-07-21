@@ -43,6 +43,31 @@ class Repository():
         elif response.status_code == 404: return False
         else: response.raise_for_status()
 
+    def _fileSha(self, file: str) -> str:
+        """
+        Retrieves the SHA of a file in the repository
+
+        #### Arguments:
+            file (str): Path of the file whose SHA is to be retrieved
+
+        #### Returns:
+            str: The SHA of the file
+        """
+        target = f"{self._url}/contents/{file}"
+        headers = {
+            'Authorization': f'token {self.token}',
+            'Accept': 'application/vnd.github.v3+json'
+        }
+
+        response = WEB.get(target, headers=headers)
+        
+        if response.status_code == 200:
+            return response.json()['sha']
+        elif response.status_code == 404:
+            return None
+        else:
+            response.raise_for_status()
+
     def upload(self, file: str, directory: str, msg: str, overwrite: bool = False) -> None:
         """
         Uploads a file to the GitHub repository
@@ -60,32 +85,38 @@ class Repository():
                 Carries a response.status_code attribute containing the HTTP status code
         """
 
-        if self.exists(directory=directory) and overwrite == False:
-            raise FileExistsError(f"File '{self.repository}/{directory}' already exists.")
-        else: 
+        file_sha = None
+        if self.exists(file=directory):
+            if not overwrite:
+                raise FileExistsError(f"File '{self.repository}/{directory}' already exists and won't be overwritten")
+            else:
+                file_sha = self._fileSha(file=directory)
         
-            target = f"{self._url}/contents/{directory}"
-            
-            with open(file, 'rb') as f:
-                content = f.read()
-                content_base64 = base64.b64encode(content).decode("utf-8")
-
-            headers = {
-                'Authorization': f'token {self.token}',
-                'Content-Type': 'application/json'
-            }
-            data = {
-                'message': msg,
-                'content': content_base64
-            }
+        target = f"{self._url}/contents/{directory}"
         
-            response = WEB.put(target, json=data, headers=headers)
+        with open(file, 'rb') as f:
+            content = f.read()
+            content_base64 = base64.b64encode(content).decode("utf-8")
 
-            if response.status_code == 422:
-                raise FileExistsError(f"File '{self.repository}/{directory}' already exists with the exact same content")
-            elif response.status_code == 401:
-                raise PermissionError(f"Token is invalid or has no permissions for {self.repository}")
-            response.raise_for_status()
+        headers = {
+            'Authorization': f'token {self.token}',
+            'Content-Type': 'application/json'
+        }
+        data = {
+            'message': msg,
+            'content': content_base64
+        }
+
+        if file_sha:
+            data['sha'] = file_sha
+        
+        response = WEB.put(target, json=data, headers=headers)
+
+        if response.status_code == 422:
+            raise FileExistsError(f"File '{self.repository}/{directory}' already exists with the exact same content as {file}")
+        elif response.status_code == 401:
+            raise PermissionError(f"Token is invalid or has no permissions for {self.repository}")
+        response.raise_for_status()
 
 
     def download(self, file: str, destination: str, overwrite: bool = False) -> None:
@@ -119,10 +150,9 @@ class Repository():
             raise PermissionError(f"Token is invalid or has no permissions for {self.repository}")
         response.raise_for_status()
         
-        content_base64 = response.content
-        content = base64.b64decode(content_base64)
+        content = response.content
         
-        if os.path.exists(destination) and overwrite == False:
+        if os.path.exists(destination) and not overwrite:
             raise FileExistsError(f"File '{destination}' already exists and mustn't be overwritten")
         else:
             with open(destination, 'wb') as f:
