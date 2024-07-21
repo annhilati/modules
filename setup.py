@@ -5,7 +5,7 @@ with open('README.md', encoding='utf-8') as readme:
 
 setup(
     name="acemeta",
-    version="0.2.1",
+    version="0.2.2",
     packages=find_packages(),
     install_requires=["requests"],  # Hier können Abhängigkeiten aufgelistet werden
     author="Annhilati",

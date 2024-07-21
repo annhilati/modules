@@ -6,6 +6,7 @@ Made by Annhilati
 from .Stochastics import binomialDF
 from .Numbers import isPrime, factorial
 from .Console import FancyConsole, Color, Time, log
+from .Files import fileToStr
 
 FC = FancyConsole
 C = Color
@@ -13,7 +14,8 @@ T = Time
 
 __all__ = ["binomialDF", "isPrime", "factorial",
            "GitHub", "Webhook",
-           "FancyConsole", "FC", "Color", "C", "Time", "T", "log"]
+           "FancyConsole", "FC", "Color", "C", "Time", "T", "log",
+           "fileToStr"]
 
 
 
