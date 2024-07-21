@@ -55,7 +55,7 @@ class Repository():
 
         #### Raises:
             FileExistsError: If a file with the same content already exists in the requested directory
-                Carries a status_code attribute containing the HTTP status code
+            PermissionError: If the token is invalid or misses permission
             Exception: For other errors encountered during download
                 Carries a response.status_code attribute containing the HTTP status code
         """
@@ -82,7 +82,9 @@ class Repository():
             response = WEB.put(target, json=data, headers=headers)
 
             if response.status_code == 422:
-                raise FileExistsError(f"File '{self.repository}/{directory}' already exists with the exact same content", status_code=response.status_code)
+                raise FileExistsError(f"File '{self.repository}/{directory}' already exists with the exact same content")
+            elif response.status_code == 401:
+                raise PermissionError(f"Token is invalid or has no permissions for {self.repository}")
             response.raise_for_status()
 
 
@@ -98,6 +100,7 @@ class Repository():
         #### Raises:
             FileNotFoundError: If the file is not found in the repository
             FileExistsError: If a file is to be overwritten in the course of the download while the function is not allowed to do so
+            PermissionError: If the token is invalid or misses permission
             Exception: For other errors encountered during download 
         """
 
@@ -111,7 +114,9 @@ class Repository():
         response = WEB.get(target, headers=headers)
         
         if response.status_code == 404:
-            raise FileNotFoundError(f"File '{file}' not found in the repository")
+            raise FileNotFoundError(f"File '{file}' not found in {self.repository}")
+        elif response.status_code == 401:
+                raise PermissionError(f"Token is invalid or has no permissions for {self.repository}")
         response.raise_for_status()
         
         content_base64 = response.content
