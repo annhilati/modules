@@ -28,3 +28,8 @@ class Discord():
     "Utility class for interactions with Discord"
     from .Discord import Webhook
     Webhook = Webhook
+
+class Minecraft():
+    "Utility class for interactions with the Mojang-API"
+    from .Minecraft import Player
+    Player = Player

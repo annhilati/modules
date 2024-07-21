@@ -19,7 +19,7 @@ class Repository():
         self.repository = repository
         self.token = token
 
-        self._url = f"https://api.github.com/repos/{self.repository}/contents"
+        self._url = f"https://api.github.com/repos/{self.repository}"
 
     def exists(self, file: str) -> bool:
         """
@@ -31,7 +31,7 @@ class Repository():
         #### Raises:
             Exception: If the files existence couldn't be checked  
         """
-        target = f"{self._url}/{file}"
+        target = f"{self._url}/contents/{file}"
         headers = {
             'Authorization': f'token {self.token}',
             'Accept': 'application/vnd.github.v3+json'
@@ -64,7 +64,7 @@ class Repository():
             raise FileExistsError(f"File '{self.repository}/{directory}' already exists.")
         else: 
         
-            target = f"{self._url}/{directory}"
+            target = f"{self._url}/contents/{directory}"
             
             with open(file, 'rb') as f:
                 content = f.read()
