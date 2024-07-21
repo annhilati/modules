@@ -21,17 +21,17 @@ class Repository():
 
         self._url = f"https://api.github.com/repos/{self.repository}/contents"
 
-    def exists(self, directory: str) -> bool:
+    def exists(self, file: str) -> bool:
         """
         Checks if a file already exists in the specified directory of the repository
 
         #### Arguments:
-            directory (str): Path of the file whose existence is to be checked
+            file (str): Path of the file whose existence is to be checked
 
         #### Raises:
             Exception: If the files existence couldn't be checked  
         """
-        target = f"{self._url}/{directory}"
+        target = f"{self._url}/{file}"
         headers = {
             'Authorization': f'token {self.token}',
             'Accept': 'application/vnd.github.v3+json'
@@ -116,7 +116,7 @@ class Repository():
         if response.status_code == 404:
             raise FileNotFoundError(f"File '{file}' not found in {self.repository}")
         elif response.status_code == 401:
-                raise PermissionError(f"Token is invalid or has no permissions for {self.repository}")
+            raise PermissionError(f"Token is invalid or has no permissions for {self.repository}")
         response.raise_for_status()
         
         content_base64 = response.content
