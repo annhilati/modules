@@ -3,10 +3,10 @@
 Made by Annhilati
 """
 
-from .Stochastics import binomialDF
-from .Numbers import isPrime, factorial
-from .Console import FancyConsole, Color, Time, log
-from .Files import fileToStr
+from .stochastics import binomialDF
+from .numbers import isPrime, factorial
+from .console import FancyConsole, Color, Time, log
+from .files import fileToStr
 
 FC = FancyConsole
 C = Color
