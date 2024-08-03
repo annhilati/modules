@@ -40,6 +40,20 @@ class Color():
     black = "\033[30m"
     r = "\033[0m"  # Reset
 
+    def get(colorname: str = None) -> str:
+        match colorname:
+            case None: return Color.r
+            case "red": return Color.red
+            case "orange": return Color.orange
+            case "yellow":return Color.yellow
+            case "green": return Color.green
+            case "blue": return Color.blue
+            case "aqua": return Color.aqua
+            case "magenta": return Color.magenta
+            case "purple": return Color.purple
+            case "black": return Color.black            
+            case _: raise SyntaxError(f"Unsupported color: {colorname}")
+
 def log(msg: str, color: str = None) -> None:
     """
     Logs a message to the console
@@ -49,19 +63,8 @@ def log(msg: str, color: str = None) -> None:
         color (str): The color the text is to be displayed in
             red, orange, yellow, green, blue, aqua, magenta, purple, black
     """
-    cr = "\033[0m"
-    match color:
-        case None: cc = Color.r
-        case "red": cc = Color.red
-        case "orange": cc = Color.orange
-        case "yellow":cc = Color.yellow
-        case "green": cc = Color.green
-        case "blue": cc = Color.blue
-        case "aqua": cc = Color.aqua
-        case "magenta": cc = Color.magenta
-        case "purple": cc = Color.purple
-        case "black": cc = Color.black            
-        case _: raise SyntaxError(f"Unsupported color: {color}")
+    cr = Color.get(None)
+    cc = Color.get(color)
     print(f"[{Time.clock()}] " + cc + msg + cr)
 
 class FancyConsole():
@@ -71,6 +74,7 @@ class FancyConsole():
     #### Functions:
         printhead(): Prints a fancy header to the console
         print(): Prints a fancy log to the console
+        input(): Asks the user for an input until it matches the criteria
     """
 
     def printhead(msg: str, first: bool = False) -> None:
@@ -102,18 +106,50 @@ class FancyConsole():
             color (str): The color the text is to be displayed in
                 red, orange, yellow, green, blue, aqua, magenta, purple, black
         """
-        cr = "\033[0m"
-        match color:
-            case None: cc = Color.r
-            case "red": cc = Color.red
-            case "orange": cc = Color.orange
-            case "yellow":cc = Color.yellow
-            case "green": cc = Color.green
-            case "blue": cc = Color.blue
-            case "aqua": cc = Color.aqua
-            case "magenta": cc = Color.magenta
-            case "purple": cc = Color.purple
-            case "black": cc = Color.black            
-            case _: raise SyntaxError(f"Unsupported color: {color}")
+        cr = Color.get(None)
+        cc = Color.get(color)
 
         print("  ║ " + cc + msg + cr)
+
+    def input(prompt: str,
+              expectedtype: str = "any",
+              promptcolor: str = None,
+              errormsg: str = "Invalid Input. Try again",
+              errorcolor: str = None):
+        """
+        Asks the user for an input until it matches the criteria
+
+        #### Arguments:
+            prompt (str): The message to be displayed when expecting an input
+                - Does not need a trailing space
+            expectedtype (str): One of `"any"`, `"str"`, `"int"`, `float`, ``
+                - use `"any"` when having special criteria implemented specifically
+            promptcolor (str): The color to display the prompt in
+                - red, orange, yellow, green, blue, aqua, magenta, purple, black
+            errormsg (str): The message to be displayed, if the user input does not meet the expected criteria
+            errorcolor (str): The color to display the error message in
+                - red, orange, yellow, green, blue, aqua, magenta, purple, black
+        """
+        while True:
+            try:
+                userInput = input(f"  ║ {Color.get(promptcolor)}{prompt}{Color.r} ")
+            
+                if expectedtype == "any" or "str":
+                    return userInput
+                
+                elif expectedtype == "int":
+                    try:
+                        out = int(userInput)
+                        return out
+                    except:
+                        raise Exception
+                
+                elif expectedtype == "float":
+                    try:
+                        out = float(userInput)
+                        return out
+                    except:
+                        raise Exception
+                    
+            except Exception:
+                print(f"  ║ {Color.get(errorcolor)}{errormsg}{Color.r}")
