@@ -4,7 +4,8 @@ Made by Annhilati
 """
 
 
-__all__ = ["GitHub", "Discord"]
+__all__ = ["files",
+           "GitHub", "Discord"]
 
 
 

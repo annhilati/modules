@@ -1,4 +1,4 @@
-def fileToStr(file: str) -> str:
+def readFile(file: str) -> str:
     """
     Returns a text files content as a string
 
