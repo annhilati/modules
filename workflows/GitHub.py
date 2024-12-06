@@ -11,7 +11,7 @@ class Repository():
         token (str): A PAT-Token that has access to the requested repository
 
     #### Methods:
-        exists(): Checks if a file exists in the repository
+        fileexists(): Checks if a file exists in the repository
         upload(): Uploads a file to the repository
         download(): Downloads a file from the repository
     """
@@ -21,7 +21,7 @@ class Repository():
 
         self._url = f"https://api.github.com/repos/{self.repository}"
 
-    def exists(self, file: str) -> bool:
+    def fileexists(self, file: str) -> bool:
         """
         Checks if a file already exists in the specified directory of the repository
 
@@ -73,7 +73,7 @@ class Repository():
             FileExistsError: If a file with the same content already exists in the requested directory
             PermissionError: If the token is invalid or misses permission
             Exception: For other errors encountered during download
-                Carries a response.status_code attribute containing the HTTP status code
+                Carries a `response.status_code` attribute containing the HTTP status code
         """
 
         file_sha = None

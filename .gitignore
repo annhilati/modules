@@ -1,4 +1,4 @@
-acemeta.egg-info/
+workflows.egg-info/
 build/
 dist/
 test.py

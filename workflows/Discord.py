@@ -21,7 +21,7 @@ class Webhook():
             msg (str): 
 
         #### Raises:
-        requests.exceptions.HTTPError: If the message couldn't be sent
+            requests.exceptions.HTTPError: If the message couldn't be sent
         """
         payload = {"content": msg}
         response = WEB.post(self._url, json=payload)

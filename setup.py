@@ -5,15 +5,13 @@ with open("README.md", 'r', encoding='utf-8') as f:
     description = f.read()
 
 setup(
-    name='acemeta',  # Name des Pakets
-    version='0.2.7',  # Version des Pakets
-    author='Annhilati',  # Autor
-    #author_email='your.email@example.com',  # E-Mail des Autors
-    description='Library for typical workflows',  # Kurze Beschreibung
-    long_description=description,  # Lange Beschreibung aus README.md
-    long_description_content_type='text/markdown',  # Inhaltstyp der langen Beschreibung
-    #url='https://github.com/yourusername/your-repo',  # URL des Projekts
-    packages=find_packages(),  # Automatische Paketerkennung
+    name='workflows',
+    version='0.0.0', 
+    author='Annhilati',
+    description='Library for typical workflows',
+    long_description=description, 
+    long_description_content_type='text/markdown',
+    packages=find_packages(),
     install_requires=[
         "requests"
     ]
