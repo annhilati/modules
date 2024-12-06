@@ -1,3 +1,7 @@
+"""
+## Module for handling files and their content
+"""
+
 def readFile(file: str) -> str:
     """
     Returns a text files content as a string
