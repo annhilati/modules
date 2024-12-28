@@ -5,7 +5,7 @@ with open("README.md", 'r', encoding='utf-8') as f:
     description = f.read()
 
 setup(
-    name='workflows',
+    name='workflows.py',
     version='0.0.0', 
     author='Annhilati',
     description='Library for typical workflows',
