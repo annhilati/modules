@@ -1,4 +1,4 @@
-workflows.egg-info/
+*.egg-info/
 build/
 dist/
 test.py
