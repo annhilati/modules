@@ -47,4 +47,4 @@ def binomialDF(n: int, k: int, p: float, mode: str = "exact") -> float:
         case "lessthen":
             return bdf_max(n, k - 1, p)
         case _:
-            raise SyntaxError("mode in binomialDF() must be one of \"exact\", \"max\", \"min\", \"morethen\" or \"lessthen\"") 
+            raise SyntaxError("mode in binomialDF() must be one of 'exact', 'max', 'min', 'morethen' or 'lessthen'") 
