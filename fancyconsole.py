@@ -21,7 +21,7 @@ class Time():
     
     @staticmethod
     def clock(datetime: datetime) -> str:
-        "Returns a time in an european format"
+        "Returns a time in an european format including seconds"
         return (datetime).strftime("%H:%M:%S")
 
 class Color():
@@ -40,15 +40,15 @@ class Color():
         else:
             return f"\033[38;2;{r};{g};{b}m"
         
-    red = code_from_rgb((255, 0, 0))
-    orange = code_from_rgb((255, 127, 0))
-    yellow = code_from_rgb((255, 255, 0))
-    green = code_from_rgb((0, 255, 0))
-    blue = code_from_rgb((0, 0, 255))
-    cyan = code_from_rgb((0, 255, 255))
-    magenta = code_from_rgb((255, 0, 255))
-    purple = code_from_rgb((127, 0, 255))
-    black = code_from_rgb((0, 0, 0))
+    red =       code_from_rgb((255, 0, 0))
+    orange =    code_from_rgb((255, 127, 0))
+    yellow =    code_from_rgb((255, 255, 0))
+    green =     code_from_rgb((0, 255, 0))
+    blue =      code_from_rgb((0, 0, 255))
+    cyan =      code_from_rgb((0, 255, 255))
+    magenta =   code_from_rgb((255, 0, 255))
+    purple =    code_from_rgb((127, 0, 255))
+    black =     code_from_rgb((0, 0, 0))
     r = "\033[0m"  # Reset
 
     def get(colorname: str = None) -> str:
