@@ -1,15 +1,18 @@
 from sympy import Symbol, pi
 
 M       = Symbol("mass",                real=True)
+M_irr   = Symbol("irreduacle-mass")
 Q       = Symbol("charge",              real=True)
 a       = Symbol("spin",                real=True)
 a_param = Symbol("spin_star",           real=True)
 R       = Symbol("radius")
-R2      = Symbol("radius2")
+r_plus  = Symbol("outer-horizon-radius")
+r_minus = Symbol("inner-horizon-radius")
 ρ       = Symbol("density",             real=True)
 J       = Symbol("angular-momentum")
 κ       = Symbol("surface-gravity")
 T_H     = Symbol("hawking-temperature", real=True, positive=True)
+A       = Symbol("horizon-area")
 
 π:      float = pi
 

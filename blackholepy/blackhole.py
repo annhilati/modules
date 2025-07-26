@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 
+from sympy import sqrt
+
 import blackholepy.formulas as formulas
 from blackholepy.formulas import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric
 from blackholepy.symbols import *
@@ -26,7 +28,7 @@ class BlackHole():
     :type charge: coloumb as float
     :param spin: Spin
     :type spin: meter as float
-    :raises CosmicCensorshipHypothesis: If the spin is so high that the horizons become imaginary
+    :raises CosmicCensorshipHypothesis: If parameters exceed certain limits so that the horizons become imaginary
     """
         
     mass:   float
@@ -35,9 +37,15 @@ class BlackHole():
     metric: BlackHoleMetric = field(init=False)
 
     def __post_init__(self):
-        if self.spin > (max_spin := (G * self.mass) / c**2):
+        if abs(self.spin) > (max_spin := (G * self.mass) / c**2):
             raise CosmicCensorshipHypothesis(f"The amount of spin stated exceeds '{max_spin}' (meters) and therefore violates the cosmic censorship hypothesis")
         
+        if abs(self.charge) > (max_charge := (sqrt(4 * π * ε_0 * G) * self.mass).evalf()):
+            raise CosmicCensorshipHypothesis(f"The amount of charge stated exceeds '{max_charge}' (coloumb) and therefore violates the cosmic censorship hypothesis")
+        
+        if self.mass < 0:
+            raise BlackHolePyError(f"Cannot have negative mass")
+
         if not self.spin and not self.charge:
             self.metric = SchwarzschildMetric
         elif not self.spin and self.charge:
@@ -62,9 +70,9 @@ class BlackHole():
         }
 
         if self.metric.r_plus is not None:            
-            outer = calculate(self.metric.r_plus, map, R)[0]
+            outer = calculate(self.metric.r_plus, map, r_plus)[0]
         if self.metric.r_minus is not None:
-            inner = calculate(self.metric.r_minus, map, R)[0]
+            inner = calculate(self.metric.r_minus, map, r_minus)[0]
         return (outer, inner)
     
     @property
@@ -108,10 +116,21 @@ class BlackHole():
     
     @property
     def surface_gravity(self) -> float:
-        map = {M: self.mass, R: self.outerHorizon, R2: self.innerHorizon, a: self.spin}
+        map = {M: self.mass, r_plus: self.outerHorizon, r_minus: self.innerHorizon, a: self.spin, Q: self.charge}
         return calculate(self.metric.surface_gravity, {symbol: value for symbol, value in map.items() if value is not None}, κ)[0]
     
     @property
     def temperature(self) -> float:
         map = {κ: self.surface_gravity}
         return calculate(formulas.hawkingTemperature, {symbol: value for symbol, value in map.items() if value is not None}, T_H)[0]
+    
+    @property
+    def horizon_area(self) -> float:
+        map = {r_plus: self.outerHorizon, a: self.spin}
+        return calculate(self.metric.horizon_area, {symbol: value for symbol, value in map.items() if value is not None}, A)[0]
+    
+    @property
+    def irreducable_mass(self) -> float:
+        map = {A: self.horizon_area}
+        return calculate(formulas.irreducable_mass, {symbol: value for symbol, value in map.items() if value is not None}, M_irr)[0]
+    
