@@ -72,7 +72,7 @@ def calculate(
     
     formulas: list[Expr | float] = solve(eq, symbol)
     solutions = [
-        formula.subs(values).evalf(n=precision)
+        formula.subs({symbol: value for symbol, value in values.items() if value is not None}).evalf(n=precision)
         for formula in formulas
     ]
     return solutions

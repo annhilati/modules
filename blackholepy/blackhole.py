@@ -116,18 +116,15 @@ class BlackHole():
     
     @property
     def surface_gravity(self) -> float:
-        map = {M: self.mass, r_plus: self.outerHorizon, r_minus: self.innerHorizon, a: self.spin, Q: self.charge}
-        return calculate(self.metric.surface_gravity, {symbol: value for symbol, value in map.items() if value is not None}, κ)[0]
+        return calculate(self.metric.surface_gravity, {M: self.mass, r_plus: self.outerHorizon, r_minus: self.innerHorizon, a: self.spin, Q: self.charge}, κ)[0]
     
     @property
     def temperature(self) -> float:
-        map = {κ: self.surface_gravity}
-        return calculate(formulas.hawkingTemperature, {symbol: value for symbol, value in map.items() if value is not None}, T_H)[0]
+        return calculate(formulas.hawkingTemperature, {κ: self.surface_gravity}, T_H)[0]
     
     @property
     def horizon_area(self) -> float:
-        map = {r_plus: self.outerHorizon, a: self.spin}
-        return calculate(self.metric.horizon_area, {symbol: value for symbol, value in map.items() if value is not None}, A)[0]
+        return calculate(self.metric.horizon_area, {r_plus: self.outerHorizon, a: self.spin}, A)[0]
     
     # @property
     # def irreducable_mass(self) -> float:
