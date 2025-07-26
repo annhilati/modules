@@ -22,12 +22,12 @@ from blackholepy.exceptions import *
 class BlackHole():
     """Class representing a black hole.
 
-    :param M: Mass
-    :type M: kilogram as float
-    :param Q: Charge
-    :type Q: coloumb as float
-    :param a: Spin
-    :type a: meter as float
+    :param mass: Mass
+    :type mass: kilogram as float
+    :param charge: Charge
+    :type charge: coloumb as float
+    :param spin: Spin
+    :type spin: meter as float
     :raises CosmicCensorshipHypothesis: If the spin is so high that the horizons become imaginary
     """
         
@@ -51,6 +51,9 @@ class BlackHole():
         
     def __repr__(self):
         return f"BlackHole(M={self.mass}, Q={self.charge}, a={self.spin})"
+    
+    def all_symbols(self) -> dict:
+        
 
     @property
     def horizons(self) -> tuple[float, float | None]:
@@ -64,7 +67,7 @@ class BlackHole():
                     M: self.mass
                 },
                 R
-            )
+            )[0]
         if self.metric.r_minus is not None:
             inner = calculate(
                 self.metric.r_minus,
@@ -72,7 +75,7 @@ class BlackHole():
                     M: self.mass
                 },
                 R
-            )
+            )[1]
         return (outer, inner)
     
     @property
@@ -86,7 +89,7 @@ class BlackHole():
         return not self.charge == 0
     
     @property
-    def innerHorizon(self) -> float:
+    def innerHorizon(self) -> float | None:
         "Returns the radius of the black holes inner event horizon"
         return self.horizons[1]
     
@@ -116,7 +119,7 @@ class BlackHole():
     
     @property
     def surface_gravity(self) -> float:
-        return calculate(formulas.surface_gravity, {R: self.outerHorizon, R2: self.innerHorizon, a: self.spin}, κ)[0]
+        return calculate(self.metric.surface_gravity, {M: self.mass, R: self.outerHorizon, R2: self.innerHorizon, a: self.spin}, κ)[0]
     
     @property
     def temperature(self) -> float:
