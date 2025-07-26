@@ -1,5 +1,5 @@
 from sympy import Equality, sqrt, pi
-from blackholepy.physics.constants import *
+from blackholepy.constants import *
 from blackholepy.symbols import *
 
 spin_momentum: Equality = Equality(a, (J / M))
@@ -8,9 +8,9 @@ spin_parameter: Equality = Equality(a_param, (c * J) / (G * M**2))
 
 density: Equality = Equality(ρ, M / ( (4/3) * pi * R**3 ))
 """
-ρ (M * L^-3): density
-M (M): mass
-R (L): radius
+:param ρ: Density
+:param M: Mass
+:param R: Radius
 """
 
 kerrNewmanRadius: tuple[Equality, Equality] = (

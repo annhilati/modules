@@ -1,19 +1,27 @@
-from sympy import Expr, solve
-from blackholepy.formulas import *
+from sympy import Expr, solve, pi
+from dataclasses import dataclass
+import blackholepy.formulas as formulas
 from blackholepy.symbols import *
 from blackholepy.exceptions import *
-from blackholepy.physics.utils import dimensions
 
+@dataclass
 class BlackHole():
-    
-    def __init__(self, M: float, Q: float = 0, a: float = 0):
+    """Class representing a black hole.
+
+    :param M: Mass
+    :type M: kilogram as float
+    :param Q: Charge
+    :type Q: coloumb as float
+    :param a: Spin
+    :type a: meter as float
+    """
         
-        self.mass = M
-        self.charge = Q        
-        self.spin = a
+    mass:   float
+    charge: float = 0      
+    spin:   float = 0
         
     def __repr__(self):
-        return f"BlackHole(M={self.mass}, Q={self.charge}, a={self.spin})"
+        return f"BlackHole(M={self.mass} kg, Q={self.charge} C, a={self.spin} m)"
 
     @property
     def spins(self) -> bool:
@@ -24,29 +32,27 @@ class BlackHole():
     def charged(self) -> bool:
         "Returns whether the black hole has charge"
         return self.charge == 0
+    
+    @property
+    def horizons(self) -> tuple[float]:
+        out = []
+        for eq in formulas.kerrNewmanRadius:
+            eq = eq.subs({M: self.mass, Q: self.charge, a: self.spin})
+            solutions = solve(eq, R)
+            out.append(solutions[0])
+
+        return tuple(out)
         
     @property
     def innerHorizon(self) -> float:
         "Returns the radius of the black holes inner event horizon"
-        eq: Equality = kerrNewmanRadius[1]
-
-        eq = eq.subs({M: self.mass, Q: self.charge, a: self.spin})
-
-        solutions = solve(eq, R)
-        solution = solutions[0]
-        return solution
+        return self.horizons[1]
     
     @property
-    def outerHorizon(self) -> Expr:
+    def outerHorizon(self) -> float:
         "Returns the radius of the black holes outer event horizon"
-        eq: Equality = kerrNewmanRadius[0]
-
-        eq = eq.subs({M: self.mass, Q: self.charge, a: self.spin})
-
-        solutions = solve(eq, R)
-        solution = solutions[0]
-        return solution
-
+        return self.horizons[0]
+    
     @property
     def radius(self) -> float:
         "Returns the black holes radius"
@@ -59,7 +65,7 @@ class BlackHole():
     @property
     def density(self) -> float:
         "Returns the black holes density"
-        eq = density
+        eq = formulas.density
         eq = eq.simplify()
         eq = eq.subs({M: self.mass, R: self.radius})
         solutions = solve(eq, ρ)
@@ -68,7 +74,7 @@ class BlackHole():
     @property
     def angularMomentum(self) -> float:
         "Returns the black holes angular momentum resulting in the specific angular momentum"
-        eq = spin_momentum
+        eq = formulas.spin_momentum
         eq = eq.subs({a: self.spin, M: self.mass})
         solutions: list[Expr] = solve(eq, J)
         return solutions[0].simplify()
