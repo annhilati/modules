@@ -1,7 +1,5 @@
 from dataclasses import dataclass, field
 
-from sympy import pi
-
 import blackholepy.formulas as formulas
 from blackholepy.formulas import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric
 from blackholepy.symbols import *
@@ -50,32 +48,23 @@ class BlackHole():
             self.metric = KerrNewmanMetric
         
     def __repr__(self):
-        return f"BlackHole(M={self.mass}, Q={self.charge}, a={self.spin})"
-    
-    def all_symbols(self) -> dict:
-        
+        return f"BlackHole(M={self.mass}, Q={self.charge}, a={self.spin})"    
 
     @property
     def horizons(self) -> tuple[float, float | None]:
 
         outer = None
         inner = None
-        if self.metric.r_plus is not None:
-            outer = calculate(
-                self.metric.r_plus,
-                {
-                    M: self.mass
-                },
-                R
-            )[0]
+        map = {
+            M: self.mass,
+            Q: self.charge,
+            a: self.spin
+        }
+
+        if self.metric.r_plus is not None:            
+            outer = calculate(self.metric.r_plus, map, R)[0]
         if self.metric.r_minus is not None:
-            inner = calculate(
-                self.metric.r_minus,
-                {
-                    M: self.mass
-                },
-                R
-            )[1]
+            inner = calculate(self.metric.r_minus, map, R)[0]
         return (outer, inner)
     
     @property
@@ -105,7 +94,7 @@ class BlackHole():
 
     @property
     def volume(self) -> float:
-        return (self.radius ** 3 * pi * 4/3)
+        return (self.radius ** 3 * π * 4/3)
 
     @property
     def density(self) -> float:
@@ -119,8 +108,10 @@ class BlackHole():
     
     @property
     def surface_gravity(self) -> float:
-        return calculate(self.metric.surface_gravity, {M: self.mass, R: self.outerHorizon, R2: self.innerHorizon, a: self.spin}, κ)[0]
+        map = {M: self.mass, R: self.outerHorizon, R2: self.innerHorizon, a: self.spin}
+        return calculate(self.metric.surface_gravity, {symbol: value for symbol, value in map.items() if value is not None}, κ)[0]
     
     @property
     def temperature(self) -> float:
-        return calculate(formulas.hawkingTemperature, {κ: self.surface_gravity}, T_H)[0]
+        map = {κ: self.surface_gravity}
+        return calculate(formulas.hawkingTemperature, {symbol: value for symbol, value in map.items() if value is not None}, T_H)[0]

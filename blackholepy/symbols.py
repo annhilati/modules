@@ -1,4 +1,4 @@
-from sympy import Symbol
+from sympy import Symbol, pi
 
 M       = Symbol("mass",                real=True)
 Q       = Symbol("charge",              real=True)
@@ -11,6 +11,7 @@ J       = Symbol("angular-momentum")
 κ       = Symbol("surface-gravity")
 T_H     = Symbol("hawking-temperature", real=True, positive=True)
 
+π:      float = pi
 
 c:      float = 299792458                # meter / second
 G:      float = 6.67430      * 10**-11   # meter^3 / (kilogram second^2)

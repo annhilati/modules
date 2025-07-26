@@ -4,7 +4,12 @@
         "**/.svn": true,
         "**/.hg": true,
         "**/.DS_Store": true,
-        "**/Thumbs.db": true
+        "**/Thumbs.db": true,
+        "blackholepy/physics/__pycache__": true,
+        "blackholepy/__pycache__": true
     },
-    "hide-files.files": []
+    "hide-files.files": [
+        "blackholepy/physics/__pycache__",
+        "blackholepy/__pycache__"
+    ]
 }

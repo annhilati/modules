@@ -1,6 +1,8 @@
 from sympy import Equality, sqrt, pi, solve, Symbol, Expr
-from blackholepy.symbols import *
 from dataclasses import dataclass
+
+from blackholepy.symbols import *
+import blackholepy.config as config
 
 @dataclass
 class BlackHoleMetric():
@@ -22,16 +24,16 @@ SchwarzschildMetric = BlackHoleMetric(
 
 ReissnerNordströmMetric = BlackHoleMetric(
     name            = "Reissner-Nordström metric",
-    r_plus          = ...,
-    r_minus         = ...,
-    surface_gravity = ...
+    r_plus          = Equality(R, ((G * M) / c**2) + (sqrt(((G * M) / c**2)**2 - ((G * Q**2) / (4 * pi * ε_0 * c**4))))),
+    r_minus         = Equality(R, ((G * M) / c**2) - (sqrt(((G * M) / c**2)**2 - ((G * Q**2) / (4 * pi * ε_0 * c**4))))),
+    surface_gravity = Equality(κ, (c**4 * (R - R2)) / (2 * G * (R**2 + a**2)))
 )
 
 KerrMetric = BlackHoleMetric(
     name            = "Kerr metric",
-    r_plus          = ...,
-    r_minus         = ...,
-    surface_gravity = ...
+    r_plus          = Equality(R, ((G * M) / c**2) + (sqrt(((G * M) / c**2)**2 - a**2))),
+    r_minus         = Equality(R, ((G * M) / c**2) - (sqrt(((G * M) / c**2)**2 - a**2))),
+    surface_gravity = Equality(κ, (c**4 * (R - R2)) / (2 * G * (R**2 + a**2)))
 )
 
 KerrNewmanMetric = BlackHoleMetric(
@@ -54,11 +56,12 @@ density: Equality = Equality(ρ, M / ( (4/3) * pi * R**3 ))
 
 hawkingTemperature: Equality = Equality(T_H, (ℏ * κ) / (2 * pi * k_B * c))
 
+
 def calculate(
     eq: Equality,
     values: dict[Symbol, float],
     symbol: Symbol,
-    precision: int = 50
+    precision: int = config.float_precision
 ) -> list[Expr | float]:
     
     formulas: list[Expr | float] = solve(eq, symbol)
