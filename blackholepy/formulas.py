@@ -1,14 +1,10 @@
 from sympy import Equality, sqrt, pi
-from sympy.physics.units import meter, second
-from .physics.constants import *
-from .symbols import *
+from blackholepy.physics.constants import *
+from blackholepy.symbols import *
 
-spin_momentum: Equality = Equality(a, (J / M) / (meter**2 / second))
-"""
-a (N): spin
-J (M * L^2 * T^-1): angular momentum
-M (M): mass
-"""
+spin_momentum: Equality = Equality(a, (J / M))
+
+spin_parameter: Equality = Equality(a_param, (c * J) / (G * M**2))
 
 density: Equality = Equality(ρ, M / ( (4/3) * pi * R**3 ))
 """
@@ -17,10 +13,11 @@ M (M): mass
 R (L): radius
 """
 
-kerrNewmanRadius = [None,
-                         Equality(R, ((G * M) / c**2) + (1 / c**2 * sqrt(((G * M)**2) - (G * Q**2) - (a**2 * c**2)))),
-                         Equality(R, ((G * M) / c**2) - (1 / c**2 * sqrt(((G * M)**2) - (G * Q**2) - (a**2 * c**2))))]
+kerrNewmanRadius: tuple[Equality, Equality] = (
+    Equality(R, ((G * M) / c**2) + (sqrt(((G * M) / c**2)**2 - ((G * Q**2) / c**4) - a**2))),
+    Equality(R, ((G * M) / c**2) - (sqrt(((G * M) / c**2)**2 - ((G * Q**2) / c**4) - a**2)))
+)
 
-oberflächenSchwerebeschleunigung = Equality(κ, (c**4 * (R - R2)) / (2 * G * (R**2 + a**2)))
+oberflächenSchwerebeschleunigung: Equality = Equality(κ, (c**4 * (R - R2)) / (2 * G * (R**2 + a**2)))
 
-hawkingTemperature = Equality(T_H, (ℏ * κ) / (2 * pi * k_B * c))
+hawkingTemperature: Equality = Equality(T_H, (ℏ * κ) / (2 * pi * k_B * c))

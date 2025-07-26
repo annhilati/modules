@@ -1,12 +1,8 @@
-class BlackHolyPyError(Exception):
-    def __init__(self, msg):
-        self.msg = msg
+class BlackHolePyError(Exception):
+    ...
 
-    def __repr__(self):
-        return self.msg
-
-class DimensionError(BlackHolyPyError):
+class DimensionError(BlackHolePyError):
     pass
 
-class UnsupportedTerm(BlackHolyPyError):
+class UnsupportedTerm(BlackHolePyError):
     pass
