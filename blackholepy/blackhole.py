@@ -1,8 +1,22 @@
-from sympy import Expr, solve, pi
 from dataclasses import dataclass
+
+from sympy import Expr, solve, pi
+
 import blackholepy.formulas as formulas
 from blackholepy.symbols import *
+from blackholepy.constants import *
 from blackholepy.exceptions import *
+
+# def spin_from_spin_param(spin_param: float, mass: float, /):
+#     eq = formulas.spin_parameter
+#     eq = eq.subs({M: mass, a_param: spin_param})
+#     solutions = solve(eq, J)
+#     j = solutions[0]
+#     eq = formulas.spin_momentum
+#     eq = eq.subs({M: mass, J: j})
+#     solutions = solve(eq, a)
+#     print(solutions[0])
+#     return solutions[0]
 
 @dataclass
 class BlackHole():
@@ -14,11 +28,16 @@ class BlackHole():
     :type Q: coloumb as float
     :param a: Spin
     :type a: meter as float
+    :raises CosmicCensorshipHypothesis: If the spin is so high that the horizons become imaginary
     """
         
     mass:   float
-    charge: float = 0      
+    charge: float = 0
     spin:   float = 0
+
+    def __post_init__(self):
+        if self.spin > (max_spin := (G * self.mass) / c**2):
+            raise CosmicCensorshipHypothesis(f"The amount of spin stated exceeds '{max_spin}' (meters) and therefore violates the cosmic censorship hypothesis")
         
     def __repr__(self):
         return f"BlackHole(M={self.mass} kg, Q={self.charge} C, a={self.spin} m)"
@@ -26,12 +45,12 @@ class BlackHole():
     @property
     def spins(self) -> bool:
         "Returns whether the black hole spins"
-        return self.spin == 0
+        return not self.spin == 0
         
     @property
     def charged(self) -> bool:
         "Returns whether the black hole has charge"
-        return self.charge == 0
+        return not self.charge == 0
     
     @property
     def horizons(self) -> tuple[float]:
@@ -41,6 +60,8 @@ class BlackHole():
             solutions = solve(eq, R)
             out.append(solutions[0])
 
+        if not self.spins:
+            out[1] = out[0]
         return tuple(out)
         
     @property
@@ -66,7 +87,6 @@ class BlackHole():
     def density(self) -> float:
         "Returns the black holes density"
         eq = formulas.density
-        eq = eq.simplify()
         eq = eq.subs({M: self.mass, R: self.radius})
         solutions = solve(eq, ρ)
         return solutions[0]

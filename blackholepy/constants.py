@@ -8,4 +8,4 @@ k_B:    float = 1.380649     * 10**-23   # joule / kelvin
 sunmass:    float = 1.989 * 10**30 # kilogram
 earthmass:  float = 5.969 * 10**24 # kilogram
 moonmass:   float = 7.346 * 10**22 # kilogram
-
+sagitariusmass: float = 4300000 * sunmass
