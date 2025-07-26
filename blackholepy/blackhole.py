@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sympy import Expr, solve, pi
 
 import blackholepy.formulas as formulas
+from blackholepy.formulas import calculate
 from blackholepy.symbols import *
 from blackholepy.constants import *
 from blackholepy.exceptions import *
@@ -40,8 +41,18 @@ class BlackHole():
             raise CosmicCensorshipHypothesis(f"The amount of spin stated exceeds '{max_spin}' (meters) and therefore violates the cosmic censorship hypothesis")
         
     def __repr__(self):
-        return f"BlackHole(M={self.mass} kg, Q={self.charge} C, a={self.spin} m)"
+        return f"BlackHole(M={self.mass}, Q={self.charge}, a={self.spin})"
 
+    @property
+    def horizons(self) -> tuple[float]:
+        out = []
+        for eq in formulas.kerrNewmanRadius:
+            out.append(calculate(eq, {M: self.mass, Q: self.charge, a: self.spin}, R)[0])
+
+        if not self.spins:
+            out[1] = out[0]
+        return tuple(out)
+    
     @property
     def spins(self) -> bool:
         "Returns whether the black hole spins"
@@ -52,18 +63,6 @@ class BlackHole():
         "Returns whether the black hole has charge"
         return not self.charge == 0
     
-    @property
-    def horizons(self) -> tuple[float]:
-        out = []
-        for eq in formulas.kerrNewmanRadius:
-            eq = eq.subs({M: self.mass, Q: self.charge, a: self.spin})
-            solutions = solve(eq, R)
-            out.append(solutions[0])
-
-        if not self.spins:
-            out[1] = out[0]
-        return tuple(out)
-        
     @property
     def innerHorizon(self) -> float:
         "Returns the radius of the black holes inner event horizon"
@@ -86,15 +85,17 @@ class BlackHole():
     @property
     def density(self) -> float:
         "Returns the black holes density"
-        eq = formulas.density
-        eq = eq.subs({M: self.mass, R: self.radius})
-        solutions = solve(eq, ρ)
-        return solutions[0]
+        return calculate(formulas.density, {M: self.mass, R: self.radius}, ρ)[0]
     
     @property
     def angularMomentum(self) -> float:
         "Returns the black holes angular momentum resulting in the specific angular momentum"
-        eq = formulas.spin_momentum
-        eq = eq.subs({a: self.spin, M: self.mass})
-        solutions: list[Expr] = solve(eq, J)
-        return solutions[0].simplify()
+        return calculate(formulas.spin_momentum, {a: self.spin, M: self.mass}, J)
+    
+    @property
+    def surface_gravity(self) -> float:
+        return calculate(formulas.surface_gravity, {R: self.outerHorizon, R2: self.innerHorizon, a: self.spin}, κ)[0]
+    
+    @property
+    def temperature(self) -> float:
+        return calculate(formulas.hawkingTemperature, {κ: self.surface_gravity}, T_H)[0]
