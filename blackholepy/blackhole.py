@@ -129,8 +129,11 @@ class BlackHole():
         map = {r_plus: self.outerHorizon, a: self.spin}
         return calculate(self.metric.horizon_area, {symbol: value for symbol, value in map.items() if value is not None}, A)[0]
     
-    @property
-    def irreducable_mass(self) -> float:
-        map = {A: self.horizon_area}
-        return calculate(formulas.irreducable_mass, {symbol: value for symbol, value in map.items() if value is not None}, M_irr)[0]
+    # @property
+    # def irreducable_mass(self) -> float:
+    #     map = {A: self.horizon_area}
+    #     return calculate(formulas.irreducable_mass, {symbol: value for symbol, value in map.items() if value is not None}, M_irr)[0]
     
+    # @property
+    # def reducable_mass(self) -> float:
+    #     return self.mass - self.irreducable_mass
