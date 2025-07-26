@@ -1,11 +1,10 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from sympy import Expr, solve, pi
+from sympy import pi
 
 import blackholepy.formulas as formulas
-from blackholepy.formulas import calculate
+from blackholepy.formulas import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric
 from blackholepy.symbols import *
-from blackholepy.constants import *
 from blackholepy.exceptions import *
 
 # def spin_from_spin_param(spin_param: float, mass: float, /):
@@ -35,23 +34,46 @@ class BlackHole():
     mass:   float
     charge: float = 0
     spin:   float = 0
+    metric: BlackHoleMetric = field(init=False)
 
     def __post_init__(self):
         if self.spin > (max_spin := (G * self.mass) / c**2):
             raise CosmicCensorshipHypothesis(f"The amount of spin stated exceeds '{max_spin}' (meters) and therefore violates the cosmic censorship hypothesis")
         
+        if not self.spin and not self.charge:
+            self.metric = SchwarzschildMetric
+        elif not self.spin and self.charge:
+            self.metric = ReissnerNordströmMetric
+        elif self.spin and not self.charge:
+            self.metric = KerrMetric
+        elif self.spin and self.charge:
+            self.metric = KerrNewmanMetric
+        
     def __repr__(self):
         return f"BlackHole(M={self.mass}, Q={self.charge}, a={self.spin})"
 
     @property
-    def horizons(self) -> tuple[float]:
-        out = []
-        for eq in formulas.kerrNewmanRadius:
-            out.append(calculate(eq, {M: self.mass, Q: self.charge, a: self.spin}, R)[0])
+    def horizons(self) -> tuple[float, float | None]:
 
-        if not self.spins:
-            out[1] = out[0]
-        return tuple(out)
+        outer = None
+        inner = None
+        if self.metric.r_plus is not None:
+            outer = calculate(
+                self.metric.r_plus,
+                {
+                    M: self.mass
+                },
+                R
+            )
+        if self.metric.r_minus is not None:
+            inner = calculate(
+                self.metric.r_minus,
+                {
+                    M: self.mass
+                },
+                R
+            )
+        return (outer, inner)
     
     @property
     def spins(self) -> bool:
