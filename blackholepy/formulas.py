@@ -82,7 +82,12 @@ def calculate(
         formula.evalf(
             n=precision,
             maxn=300,
-            subs={symbol: value for symbol, value in values.items() if value is not None})
+            subs={
+                symbol: value
+                for symbol, value in values.items()
+                if value is not None
+                }
+        )
         for formula in formulas
     ]
     return solutions
