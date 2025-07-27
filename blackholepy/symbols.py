@@ -1,4 +1,4 @@
-from sympy import Symbol, pi
+from sympy import Symbol, pi, Float
 
 M       = Symbol("mass",                real=True)
 M_irr   = Symbol("irreduacle-mass")
@@ -13,14 +13,16 @@ J       = Symbol("angular-momentum")
 κ       = Symbol("surface-gravity")
 T_H     = Symbol("hawking-temperature", real=True, positive=True)
 A       = Symbol("horizon-area")
+P       = Symbol("hawking-power")
+t       = Symbol("time")
 
-π:      float = pi
+π:      ...   = pi
 
-c:      float = 299792458                # meter / second
-G:      float = 6.67430      * 10**-11   # meter^3 / (kilogram second^2)
-ℏ:      float = 6.62607015   * 10**-34   # joule seconds
-k_B:    float = 1.380649     * 10**-23   # joule / kelvin
-ε_0:    float = 8.8541878188 * 10**-12   # ampere seconds / volt meter
+c:      Float = Float(299792458)            # meter / second                   # exact
+G:      Float = Float('6.67430e-11')        # meter^3 / (kilogram second^2)    # not exact
+ℏ:      Float = Float('1.054571817e-34')    # joule seconds                    # exact
+k_B:    Float = Float('1.380649e-23')       # joule / kelvin                   # exact
+ε_0:    Float = Float('8.8541878188e-12')   # ampere seconds / volt meter      # not exact
 
 sunmass:    float = 1.989 * 10**30 # kilogram
 earthmass:  float = 5.969 * 10**24 # kilogram
