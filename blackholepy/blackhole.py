@@ -120,7 +120,7 @@ class BlackHole():
     @property
     def density(self) -> float:
         "Density of the black hole"
-        return self.mass / self.volume
+        return Float(self.mass) / Float(self.volume)
     
     @property
     def angular_momentum(self) -> float:
@@ -142,10 +142,10 @@ class BlackHole():
         "Gravitational mass of the black hole that can't be reduced through any process"
         return calculate(formulas.irreducable_mass, {A: self.horizon_area}, M_irr)[0]
     
-    @property
-    def reducable_mass(self) -> float:
-        "Gravitational mass of the black hole that can be reduced through some process"
-        return self.mass - self.irreducable_mass
+    # @property
+    # def reducable_mass(self) -> float:
+    #     "Gravitational mass of the black hole that can be reduced through some process"
+    #     return Float(self.mass) - Float(self.irreducable_mass)
     
     @property
     def hawking_power(self) -> float:
