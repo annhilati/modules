@@ -2,23 +2,18 @@ from dataclasses import dataclass, field
 import warnings
 import re
 
-from sympy import sqrt, SympifyError
+from sympy import sqrt
 
 from blackholepy import formulas
 from blackholepy.formulas import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric
 from blackholepy.symbols import *
 from blackholepy.exceptions import *
 
+# Wrong result still
+#
 # def spin_from_spin_param(spin_param: float, mass: float, /):
-#     eq = formulas.spin_parameter
-#     eq = eq.subs({M: mass, a_param: spin_param})
-#     solutions = solve(eq, J)
-#     j = solutions[0]
-#     eq = formulas.spin_momentum
-#     eq = eq.subs({M: mass, J: j})
-#     solutions = solve(eq, a)
-#     print(solutions[0])
-#     return solutions[0]
+    # value = calculate(formulas.spin_parameter, {M: mass, a_param: spin_param}, J)[0]
+    # return calculate(formulas.spin_momentum, {M: mass, J: value}, a)[0]
 
 @dataclass
 class BlackHole():
@@ -34,7 +29,8 @@ class BlackHole():
 
     Raises
     ----------
-    CosmicCensorshipHypothesis : If parameters exceed certain limits so that the horizons become imaginary
+    CosmicCensorshipHypothesis : If parameters exceed certain limits, so that horizons become imaginary
+    LawOfConservationOfEnergy : If parameters cause behavior that would destroy energy or create it out of nothing
 
     """
         
@@ -44,14 +40,14 @@ class BlackHole():
     metric: BlackHoleMetric = field(init=False)
 
     def __post_init__(self):
+        if self.mass < 0:
+            raise LawOfConservationOfEnergy(f"Negative mass contradicts the general theory of relativity.")
+        
         if abs(self.spin) > (max_spin := (G * self.mass) / c**2):
             raise CosmicCensorshipHypothesis(f"The amount of spin stated exceeds '{max_spin}' (meters) and therefore violates the cosmic censorship hypothesis.")
         
         if abs(self.charge) > (max_charge := (sqrt(4 * π * ε_0 * G) * self.mass).evalf()):
             raise CosmicCensorshipHypothesis(f"The amount of charge stated exceeds '{max_charge}' (coloumb) and therefore violates the cosmic censorship hypothesis.")
-        
-        if self.mass < 0:
-            raise LawOfConservationOfEnergy(f"Negative mass contradicts the general theory of relativity.")
 
         if not self.spin and not self.charge:
             self.metric = SchwarzschildMetric
