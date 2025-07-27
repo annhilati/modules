@@ -45,13 +45,13 @@ class BlackHole():
 
     def __post_init__(self):
         if abs(self.spin) > (max_spin := (G * self.mass) / c**2):
-            raise CosmicCensorshipHypothesis(f"The amount of spin stated exceeds '{max_spin}' (meters) and therefore violates the cosmic censorship hypothesis")
+            raise CosmicCensorshipHypothesis(f"The amount of spin stated exceeds '{max_spin}' (meters) and therefore violates the cosmic censorship hypothesis.")
         
         if abs(self.charge) > (max_charge := (sqrt(4 * π * ε_0 * G) * self.mass).evalf()):
-            raise CosmicCensorshipHypothesis(f"The amount of charge stated exceeds '{max_charge}' (coloumb) and therefore violates the cosmic censorship hypothesis")
+            raise CosmicCensorshipHypothesis(f"The amount of charge stated exceeds '{max_charge}' (coloumb) and therefore violates the cosmic censorship hypothesis.")
         
         if self.mass < 0:
-            raise BlackHolePyError(f"Cannot have negative mass")
+            raise LawOfConservationOfEnergy(f"Negative mass contradicts the general theory of relativity.")
 
         if not self.spin and not self.charge:
             self.metric = SchwarzschildMetric
@@ -105,6 +105,10 @@ class BlackHole():
     
     @property
     def horizon_area(self) -> float:
+        """
+        Area of the black hole's outermost event horizon<br>
+        This area can be larger than the surface area of a sphere with the black hole's radius.
+        """
         return calculate(self.metric.horizon_area, {r_plus: self.outerHorizon, a: self.spin}, A)[0]
 
     @property
@@ -146,10 +150,12 @@ class BlackHole():
     
     @property
     def hawking_power(self) -> float:
+        "Power of the black hole's Hawking radiation"
         return calculate(self.metric.hawking_power, {M: self.mass}, P)[0]
     
     @property
     def evaporation_time(self) -> float:
+        "Amount of time until the black hole will have completely evaporated"
         return calculate(self.metric.evaporation_time, {M: self.mass}, t)[0]
 
     def __getattribute__(self, name):
