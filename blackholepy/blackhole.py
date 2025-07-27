@@ -1,9 +1,10 @@
 from dataclasses import dataclass, field
 import warnings
+import re
 
-from sympy import sqrt
+from sympy import sqrt, SympifyError
 
-import blackholepy.formulas as formulas
+from blackholepy import formulas
 from blackholepy.formulas import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric
 from blackholepy.symbols import *
 from blackholepy.exceptions import *
@@ -60,9 +61,6 @@ class BlackHole():
             self.metric = KerrMetric
         elif self.spin and self.charge:
             self.metric = KerrNewmanMetric
-        
-    def __repr__(self):
-        return f"BlackHole(M={self.mass}, Q={self.charge}, a={self.spin})"    
 
     @property
     def horizons(self) -> tuple[float, float | None]:
@@ -74,9 +72,8 @@ class BlackHole():
             Q: self.charge,
             a: self.spin
         }
-
-        if self.metric.r_plus is not None:            
-            outer = calculate(self.metric.r_plus, map, r_plus)[0]
+       
+        outer = calculate(self.metric.r_plus, map, r_plus)[0]
         if self.metric.r_minus is not None:
             inner = calculate(self.metric.r_minus, map, r_minus)[0]
         return (outer, inner)
@@ -135,7 +132,7 @@ class BlackHole():
     @property
     def temperature(self) -> float:
         "Hawking temperature of the black hole"
-        return calculate(formulas.hawkingTemperature, {κ: self.surface_gravity}, T_H)[0]
+        return calculate(formulas.hawking_temperature, {κ: self.surface_gravity}, T_H)[0]
     
     @property
     def irreducable_mass(self) -> float:
@@ -154,3 +151,18 @@ class BlackHole():
     @property
     def evaporation_time(self) -> float:
         return calculate(self.metric.evaporation_time, {M: self.mass}, t)[0]
+
+    def __getattribute__(self, name):
+        try:
+            value = super().__getattribute__(name)
+
+        except Exception as e:
+            msg = str(e)
+            if match := re.search(r"cannot sympify object of type <class 'ellipsis'>", msg):
+                raise NotImplementedError(f"'{name}' is not implemented for {self.metric} black holes yet")
+            raise e
+        
+        return value
+        
+    def __repr__(self):
+        return f"BlackHole(M={self.mass}, Q={self.charge}, a={self.spin})"    

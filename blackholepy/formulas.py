@@ -6,7 +6,7 @@ import blackholepy.config as config
 
 @dataclass
 class BlackHoleMetric():
-    """Class representing a set of formulas rigarding properties of black holes that are solutions to the Einstein field equations and are true under certain circumstances."""
+    """Class representing a set of formulas rigarding properties of black holes, result from a solution to the Einstein field equations and are true under certain circumstances."""
     
     name:             str
     r_plus:           Equality
@@ -18,6 +18,9 @@ class BlackHoleMetric():
 
     def __repr__(self):
         return f"<BlackHoleMetric '{self.name}'>"
+    
+    def __str__(self):
+        return self.name
 
 SchwarzschildMetric = BlackHoleMetric(
     name             = "Schwarzschild metric",
@@ -63,18 +66,18 @@ spin_momentum: Equality = Equality(a, (J / M))
 
 spin_parameter: Equality = Equality(a_param, (c * J) / (G * M**2))
 
-hawkingTemperature: Equality = Equality(T_H, (ℏ * κ) / (2 * pi * k_B * c))
+hawking_temperature: Equality = Equality(T_H, (ℏ * κ) / (2 * pi * k_B * c))
 
 irreducable_mass: Equality = Equality(M_irr, sqrt((c**4 * A) / (16 * pi * G**2)))
 
 def calculate(
     eq: Equality,
     values: dict[Symbol, float],
-    symbol: Symbol,
+    unknown: Symbol,
     precision: int = config.float_precision
 ) -> list[Expr | float]:
     
-    formulas: list[Expr | float] = solve(eq, symbol)
+    formulas: list[Expr | float] = solve(eq, unknown)
     solutions = [
         formula.evalf(
             n=precision,
