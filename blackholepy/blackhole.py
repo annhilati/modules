@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+import warnings
 
 from sympy import sqrt
 
@@ -22,18 +23,23 @@ from blackholepy.exceptions import *
 class BlackHole():
     """Class representing a black hole.
 
-    :param mass: Mass
-    :type mass: kilogram as float
-    :param charge: Charge
-    :type charge: coloumb as float
-    :param spin: Spin
-    :type spin: meter as float
-    :raises CosmicCensorshipHypothesis: If parameters exceed certain limits so that the horizons become imaginary
+    Parameters
+    ----------
+    mass : kilogram as float
+    charge : coloumb as float
+    spin : meter as float
+        The Metric required here is the 'Kerr-parameter' *a*, messured in meters.<br>
+        Not to be confused with the spin parameter *a*<sub>*</sub> (in [0, 1]) or the angular momentum *J* (kg m^2 / s).
+
+    Raises
+    ----------
+    CosmicCensorshipHypothesis : If parameters exceed certain limits so that the horizons become imaginary
+
     """
         
     mass:   float
-    charge: float = 0
-    spin:   float = 0
+    charge: float           = 0
+    spin:   float           = 0
     metric: BlackHoleMetric = field(init=False)
 
     def __post_init__(self):
@@ -77,61 +83,68 @@ class BlackHole():
     
     @property
     def spins(self) -> bool:
-        "Returns whether the black hole spins"
+        "Whether the black hole spins"
         return not self.spin == 0
         
     @property
     def charged(self) -> bool:
-        "Returns whether the black hole has charge"
+        "Whether the black hole has charge"
         return not self.charge == 0
     
     @property
     def innerHorizon(self) -> float | None:
-        "Returns the radius of the black holes inner event horizon"
+        "Radius of the black holes inner event horizon"
         return self.horizons[1]
     
     @property
     def outerHorizon(self) -> float:
-        "Returns the radius of the black holes outer event horizon"
+        "Radius of the black holes outer event horizon"
         return self.horizons[0]
     
     @property
     def radius(self) -> float:
-        "Returns the black holes radius"
+        "Radius of the black hole given by the outermost event horizon"
         return self.outerHorizon
-
-    @property
-    def volume(self) -> float:
-        return (self.radius ** 3 * π * 4/3)
-
-    @property
-    def density(self) -> float:
-        "Returns the black holes density"
-        return calculate(formulas.density, {M: self.mass, R: self.radius}, ρ)[0]
-    
-    @property
-    def angularMomentum(self) -> float:
-        "Returns the black holes angular momentum resulting in the specific angular momentum"
-        return calculate(formulas.spin_momentum, {a: self.spin, M: self.mass}, J)
-    
-    @property
-    def surface_gravity(self) -> float:
-        return calculate(self.metric.surface_gravity, {M: self.mass, r_plus: self.outerHorizon, r_minus: self.innerHorizon, a: self.spin, Q: self.charge}, κ)[0]
-    
-    @property
-    def temperature(self) -> float:
-        return calculate(formulas.hawkingTemperature, {κ: self.surface_gravity}, T_H)[0]
     
     @property
     def horizon_area(self) -> float:
         return calculate(self.metric.horizon_area, {r_plus: self.outerHorizon, a: self.spin}, A)[0]
+
+    @property
+    def volume(self) -> float:
+        "Volume of the black hole"
+        if not self.metric == SchwarzschildMetric:
+            warnings.warn("Volume calculation for black holes that aren't of the Schwarzschild metric is only approximated.")
+        return (self.radius**3 * π * 4/3)
+
+    @property
+    def density(self) -> float:
+        "Density of the black hole"
+        return self.mass / self.volume
+    
+    @property
+    def angular_momentum(self) -> float:
+        "Angular momentum of the black hole"
+        return calculate(formulas.spin_momentum, {a: self.spin, M: self.mass}, J)
+    
+    @property
+    def surface_gravity(self) -> float:
+        "Surface gravity of the black hole"
+        return calculate(self.metric.surface_gravity, {M: self.mass, r_plus: self.outerHorizon, r_minus: self.innerHorizon, a: self.spin, Q: self.charge}, κ)[0]
+    
+    @property
+    def temperature(self) -> float:
+        "Hawking temperature of the black hole"
+        return calculate(formulas.hawkingTemperature, {κ: self.surface_gravity}, T_H)[0]
     
     @property
     def irreducable_mass(self) -> float:
+        "Gravitational mass of the black hole that can't be reduced through any process"
         return calculate(formulas.irreducable_mass, {A: self.horizon_area}, M_irr)[0]
     
     @property
     def reducable_mass(self) -> float:
+        "Gravitational mass of the black hole that can be reduced through some process"
         return self.mass - self.irreducable_mass
     
     @property

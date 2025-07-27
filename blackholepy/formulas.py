@@ -63,13 +63,6 @@ spin_momentum: Equality = Equality(a, (J / M))
 
 spin_parameter: Equality = Equality(a_param, (c * J) / (G * M**2))
 
-density: Equality = Equality(ρ, M / ( (4/3) * pi * R**3 ))
-"""
-:param ρ: Density
-:param M: Mass
-:param R: Radius
-"""
-
 hawkingTemperature: Equality = Equality(T_H, (ℏ * κ) / (2 * pi * k_B * c))
 
 irreducable_mass: Equality = Equality(M_irr, sqrt((c**4 * A) / (16 * pi * G**2)))
