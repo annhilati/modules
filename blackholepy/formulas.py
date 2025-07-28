@@ -70,9 +70,7 @@ KerrNewmanMetric = BlackHoleMetric(
 
 spin_momentum: Equality = Equality(a, (J / M))
 
-spin_parameter: Equality = Equality(a_star, a / ((G * M) / c**2))
-
-# hawking_temperature: Equality = Equality(T_H, (ℏ * κ) / (2 * pi * k_B * c))
+dimensionless_spin: Equality = Equality(a_star, a / ((G * M) / c**2))
 
 irreducable_mass: Equality = Equality(M_irr, sqrt((c**4 * A) / (16 * pi * G**2)))
 

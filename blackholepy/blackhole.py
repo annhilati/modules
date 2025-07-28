@@ -59,22 +59,6 @@ class BlackHole():
         elif self.spin and self.charge:
             self.metric = KerrNewmanMetric
 
-    @property
-    def horizons(self) -> tuple[float, float | None]:
-
-        outer = None
-        inner = None
-        map = {
-            M: self.mass,
-            Q: self.charge,
-            a: self.spin
-        }
-       
-        outer = calculate(self.metric.r_plus, map, r_plus)
-        if self.metric.r_minus is not None:
-            inner = calculate(self.metric.r_minus, map, r_minus)
-        return (outer, inner)
-    
     def advance_time(self, timespan: timedelta | float, /, warn_on_evaporation: bool = False) -> None:
         """Reevaluates the properties of the black hole as if `timespan` time had passed.<br>
         This will reduce it's mass due to hawking radiation.
@@ -99,6 +83,32 @@ class BlackHole():
     def charged(self) -> bool:
         "Whether the black hole has charge"
         return not self.charge == 0
+    
+    @property
+    def angular_momentum(self) -> float:
+        "Angular momentum of the black hole"
+        return calculate(formulas.spin_momentum, {a: self.spin, M: self.mass}, J)
+    
+    @property
+    def dimless_spin(self) -> float:
+        ""
+        return calculate(formulas.dimensionless_spin, {a: self.spin, M: self.mass}, a_star)
+    
+    @property
+    def horizons(self) -> tuple[float, float | None]:
+
+        outer = None
+        inner = None
+        map = {
+            M: self.mass,
+            Q: self.charge,
+            a: self.spin
+        }
+       
+        outer = calculate(self.metric.r_plus, map, r_plus)
+        if self.metric.r_minus is not None:
+            inner = calculate(self.metric.r_minus, map, r_minus)
+        return (outer, inner)
     
     @property
     def innerHorizon(self) -> float | None:
@@ -136,16 +146,6 @@ class BlackHole():
     def density(self) -> float:
         "Density of the black hole"
         return Float(self.mass) / Float(self.volume)
-    
-    @property
-    def angular_momentum(self) -> float:
-        "Angular momentum of the black hole"
-        return calculate(formulas.spin_momentum, {a: self.spin, M: self.mass}, J)
-    
-    @property
-    def spin_param(self) -> float:
-        ""
-        return calculate(formulas.spin_parameter, {a: self.spin, M: self.mass}, a_star)
     
     @property
     def surface_gravity(self) -> float:
