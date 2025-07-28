@@ -1,4 +1,4 @@
-from sympy import Symbol, Float, pi
+from sympy import Symbol, Float, NumberSymbol, pi
 
 # These symbols shall no longer be used a variables for specific Quantities
 A       = Symbol("A")
@@ -18,7 +18,7 @@ t       = Symbol("t")
 ρ       = Symbol("ρ")
 κ       = Symbol("κ")
 
-π:      ...   = pi
+π:      NumberSymbol = pi
 
 c:      Float = Float(299792458)            # meter / second                   # exact
 G:      Float = Float('6.67430e-11')        # meter^3 / (kilogram second^2)    # not exact
@@ -26,7 +26,7 @@ G:      Float = Float('6.67430e-11')        # meter^3 / (kilogram second^2)    #
 k_B:    Float = Float('1.380649e-23')       # joule / kelvin                   # exact
 ε_0:    Float = Float('8.8541878188e-12')   # ampere seconds / volt meter      # not exact
 
-sunmass:    float = 1.989 * 10**30 # kilogram
-earthmass:  float = 5.969 * 10**24 # kilogram
-moonmass:   float = 7.346 * 10**22 # kilogram
+sunmass:        float = 1.989 * 10**30    # kilogram
+earthmass:      float = 5.969 * 10**24    # kilogram
+moonmass:       float = 7.346 * 10**22    # kilogram
 sagitariusmass: float = 4300000 * sunmass # kilogram

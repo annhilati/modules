@@ -32,13 +32,13 @@ class BlackHole():
     ----------
     CosmicCensorshipHypothesis : If parameters exceed certain limits, so that event horizons become imaginary
     LawOfConservationOfEnergy : If parameters cause behavior that would destroy energy or create it out of nothing
-
     """
         
     mass:   float
     charge: float           = 0
     spin:   float           = 0
     metric: BlackHoleMetric = field(init=False)
+    "Collection of formulas that descripe the black holes properties"
 
     def __post_init__(self):
         if self.mass < 0:
@@ -70,9 +70,9 @@ class BlackHole():
             a: self.spin
         }
        
-        outer = calculate(self.metric.r_plus, map, r_plus)[0]
+        outer = calculate(self.metric.r_plus, map, r_plus)
         if self.metric.r_minus is not None:
-            inner = calculate(self.metric.r_minus, map, r_minus)[0]
+            inner = calculate(self.metric.r_minus, map, r_minus)
         return (outer, inner)
     
     @property
@@ -106,7 +106,7 @@ class BlackHole():
         Area of the black hole's outermost event horizon<br>
         This area can be larger than the surface area of a sphere with the black hole's radius.
         """
-        return calculate(self.metric.horizon_area, {r_plus: self.outerHorizon, a: self.spin}, A)[0]
+        return calculate(self.metric.horizon_area, {r_plus: self.outerHorizon, a: self.spin}, A)
 
     @property
     def volume(self) -> float:
@@ -130,17 +130,17 @@ class BlackHole():
     @property
     def surface_gravity(self) -> float:
         "Surface gravity of the black hole"
-        return calculate(self.metric.surface_gravity, {M: self.mass, r_plus: self.outerHorizon, r_minus: self.innerHorizon, a: self.spin, Q: self.charge}, κ)[0]
+        return calculate(self.metric.surface_gravity, {M: self.mass, r_plus: self.outerHorizon, r_minus: self.innerHorizon, a: self.spin, Q: self.charge}, κ)
     
     @property
     def temperature(self) -> float:
         "Hawking temperature of the black hole"
-        return calculate(formulas.hawking_temperature, {κ: self.surface_gravity}, T_H)[0]
+        return calculate(formulas.hawking_temperature, {κ: self.surface_gravity}, T_H)
     
     @property
     def irreducable_mass(self) -> float:
         "Gravitational mass of the black hole that can't be reduced through any process"
-        return calculate(formulas.irreducable_mass, {A: self.horizon_area}, M_irr)[0]
+        return calculate(formulas.irreducable_mass, {A: self.horizon_area}, M_irr)
     
     # @property
     # def reducable_mass(self) -> float:
@@ -150,12 +150,12 @@ class BlackHole():
     @property
     def hawking_power(self) -> float:
         "Power of the black hole's Hawking radiation"
-        return calculate(self.metric.hawking_power, {M: self.mass}, P)[0]
+        return calculate(self.metric.hawking_power, {M: self.mass}, P)
     
     @property
     def evaporation_time(self) -> float:
         "Amount of time until the black hole will have completely evaporated"
-        return calculate(self.metric.evaporation_time, {M: self.mass}, t)[0]
+        return calculate(self.metric.evaporation_time, {M: self.mass}, t)
     
     def warp(self, timespan: timedelta | float, warn_on_evaporation: bool = False) -> None:
         """Reevaluates the properties of the black hole as if `timespan` time had passed.<br>
@@ -170,7 +170,7 @@ class BlackHole():
         else:
             target_time = self.evaporation_time - seconds
 
-        self.mass = calculate(self.metric.evaporation_time, {t: target_time}, M)[0]
+        self.mass = calculate(self.metric.evaporation_time, {t: target_time}, M)
 
     def __getattribute__(self, name):
         try:
