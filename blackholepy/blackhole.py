@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import timedelta
 import warnings
 import re
 
@@ -29,7 +30,7 @@ class BlackHole():
 
     Raises
     ----------
-    CosmicCensorshipHypothesis : If parameters exceed certain limits, so that horizons become imaginary
+    CosmicCensorshipHypothesis : If parameters exceed certain limits, so that event horizons become imaginary
     LawOfConservationOfEnergy : If parameters cause behavior that would destroy energy or create it out of nothing
 
     """
@@ -109,7 +110,9 @@ class BlackHole():
 
     @property
     def volume(self) -> float:
-        "Volume of the black hole"
+        """Volume of the black hole<br>
+        This volume can be larger than the volume of a sphere with the black hole's radius.
+        """
         if not self.metric == SchwarzschildMetric:
             warnings.warn("Volume calculation for black holes that aren't of the Schwarzschild metric is only approximated.")
         return (self.radius**3 * π * 4/3)
@@ -153,6 +156,21 @@ class BlackHole():
     def evaporation_time(self) -> float:
         "Amount of time until the black hole will have completely evaporated"
         return calculate(self.metric.evaporation_time, {M: self.mass}, t)[0]
+    
+    def warp(self, timespan: timedelta | float, warn_on_evaporation: bool = False) -> None:
+        """Reevaluates the properties of the black hole as if `timespan` time had passed.<br>
+        This will reduce it's mass due to hawking radiation.
+        """
+        seconds = timespan.total_seconds() if isinstance(timespan, timedelta) else timespan
+
+        if seconds > self.evaporation_time:
+            target_time = 0
+            if warn_on_evaporation:
+                warnings.warn(f"The black hole has reached a mass of '0' in the process of warping {seconds} seconds (after {(100 * self.evaporation_time / seconds):.2f}%).")
+        else:
+            target_time = self.evaporation_time - seconds
+
+        self.mass = calculate(self.metric.evaporation_time, {t: target_time}, M)[0]
 
     def __getattribute__(self, name):
         try:
@@ -167,4 +185,4 @@ class BlackHole():
         return value
         
     def __repr__(self):
-        return f"BlackHole(M={self.mass}, Q={self.charge}, a={self.spin})"    
+        return f"BlackHole(M={self.mass}, Q={self.charge}, a={self.spin})"

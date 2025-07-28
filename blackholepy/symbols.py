@@ -1,20 +1,22 @@
-from sympy import Symbol, pi, Float
+from sympy import Symbol, Float, pi
 
-M       = Symbol("mass",                real=True)
-M_irr   = Symbol("irreduacle-mass")
-Q       = Symbol("charge",              real=True)
-a       = Symbol("spin",                real=True)
-a_param = Symbol("spin_star",           real=True)
-R       = Symbol("radius")
-r_plus  = Symbol("outer-horizon-radius")
-r_minus = Symbol("inner-horizon-radius")
-ρ       = Symbol("density",             real=True)
-J       = Symbol("angular-momentum")
-κ       = Symbol("surface-gravity")
-T_H     = Symbol("hawking-temperature", real=True, positive=True)
-A       = Symbol("horizon-area")
-P       = Symbol("hawking-power")
-t       = Symbol("time")
+# These symbols shall no longer be used a variables for specific Quantities
+A       = Symbol("A")
+a       = Symbol("a")
+a_star  = Symbol("a_star")
+J       = Symbol("J")
+M       = Symbol("M")
+M_irr   = Symbol("M_irr")
+P       = Symbol("P")
+Q       = Symbol("Q")
+R       = Symbol("R")
+r_minus = Symbol("r_minus")
+r_plus  = Symbol("r_plus")
+S       = Symbol("S")
+T_H     = Symbol("T_H")
+t       = Symbol("t")
+ρ       = Symbol("ρ")
+κ       = Symbol("κ")
 
 π:      ...   = pi
 

@@ -1,4 +1,17 @@
-from blackholepy.blackhole import BlackHole, spin_from_spin_param
+from blackholepy.blackhole import BlackHole
 import blackholepy.config as config
 
-__all__ = ["BlackHole", "spin_from_spin_param", "config"]
+_symbols = [BlackHole, config]
+_constants = []
+
+__all__ = [obj.__name__ for obj in _symbols].extend(_constants)
+
+# ╭───────────────────────────────────────────────────────────────────────────────╮
+# │                                     Config                                    │ 
+# ╰───────────────────────────────────────────────────────────────────────────────╯
+
+import warnings as _warnings
+def warning(message, category, filename, lineno, file=None, line=None):
+    print(f"{filename}\n  BlackHolePy: {message}")
+
+_warnings.showwarning = warning

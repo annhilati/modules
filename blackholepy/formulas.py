@@ -64,11 +64,13 @@ KerrNewmanMetric = BlackHoleMetric(
 
 spin_momentum: Equality = Equality(a, (J / M))
 
-spin_parameter: Equality = Equality(a_param, (c * J) / (G * M**2))
+spin_parameter: Equality = Equality(a_star, (c * J) / (G * M**2))
 
 hawking_temperature: Equality = Equality(T_H, (ℏ * κ) / (2 * pi * k_B * c))
 
 irreducable_mass: Equality = Equality(M_irr, sqrt((c**4 * A) / (16 * pi * G**2)))
+
+entropy: Equality = Equality(S, (k_B * c**3 * A) / (4 * G * ℏ))
 
 def calculate(
     eq: Equality,
