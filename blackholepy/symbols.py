@@ -14,7 +14,7 @@ r_minus = Symbol("r_minus")
 r_plus  = Symbol("r_plus")
 S       = Symbol("S")
 T_H     = Symbol("T_H")
-t       = Symbol("t")
+τ       = Symbol("τ")
 ρ       = Symbol("ρ")
 κ       = Symbol("κ")
 

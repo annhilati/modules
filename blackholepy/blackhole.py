@@ -5,7 +5,7 @@ import re
 
 from sympy import sqrt
 
-from blackholepy import formulas
+from blackholepy import formulas, config
 from blackholepy.formulas import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric
 from blackholepy.symbols import *
 from blackholepy.exceptions import *
@@ -44,10 +44,10 @@ class BlackHole():
         if self.mass < 0:
             raise LawOfConservationOfEnergy(f"Negative mass contradicts the general theory of relativity.")
         
-        if abs(self.spin) > (max_spin := (G * self.mass) / c**2):
+        if abs(self.spin)   > (max_spin   := Float((G * self.mass) / c**2,                      precision=config.float_precision)):
             raise CosmicCensorshipHypothesis(f"The amount of spin stated exceeds '{max_spin}' (meters) and therefore violates the cosmic censorship hypothesis.")
         
-        if abs(self.charge) > (max_charge := (sqrt(4 * π * ε_0 * G) * self.mass).evalf()):
+        if abs(self.charge) > (max_charge := Float((sqrt(4 * π * ε_0 * G) * self.mass).evalf(), precision=config.float_precision)):
             raise CosmicCensorshipHypothesis(f"The amount of charge stated exceeds '{max_charge}' (coloumb) and therefore violates the cosmic censorship hypothesis.")
 
         if not self.spin and not self.charge:
@@ -74,6 +74,21 @@ class BlackHole():
         if self.metric.r_minus is not None:
             inner = calculate(self.metric.r_minus, map, r_minus)
         return (outer, inner)
+    
+    def advance_time(self, timespan: timedelta | float, /, warn_on_evaporation: bool = False) -> None:
+        """Reevaluates the properties of the black hole as if `timespan` time had passed.<br>
+        This will reduce it's mass due to hawking radiation.
+        """
+        seconds = timespan.total_seconds() if isinstance(timespan, timedelta) else timespan
+
+        if seconds > self.evaporation_time:
+            target_time = 0
+            if warn_on_evaporation:
+                warnings.warn(f"The black hole has reached a mass of '0' in the process of warping {seconds} seconds (after {(100 * self.evaporation_time / seconds):.2f}%).")
+        else:
+            target_time = self.evaporation_time - seconds
+
+        self.mass = calculate(self.metric.evaporation_time, {τ: target_time}, M)
     
     @property
     def spins(self) -> bool:
@@ -128,6 +143,11 @@ class BlackHole():
         return calculate(formulas.spin_momentum, {a: self.spin, M: self.mass}, J)
     
     @property
+    def spin_param(self) -> float:
+        ""
+        return calculate(formulas.spin_parameter, {a: self.spin, M: self.mass}, a_star)
+    
+    @property
     def surface_gravity(self) -> float:
         "Surface gravity of the black hole"
         return calculate(self.metric.surface_gravity, {M: self.mass, r_plus: self.outerHorizon, r_minus: self.innerHorizon, a: self.spin, Q: self.charge}, κ)
@@ -135,7 +155,7 @@ class BlackHole():
     @property
     def temperature(self) -> float:
         "Hawking temperature of the black hole"
-        return calculate(formulas.hawking_temperature, {κ: self.surface_gravity}, T_H)
+        return calculate(self.metric.hawking_temperature, {κ: self.surface_gravity}, T_H)
     
     @property
     def irreducable_mass(self) -> float:
@@ -155,22 +175,7 @@ class BlackHole():
     @property
     def evaporation_time(self) -> float:
         "Amount of time until the black hole will have completely evaporated"
-        return calculate(self.metric.evaporation_time, {M: self.mass}, t)
-    
-    def warp(self, timespan: timedelta | float, warn_on_evaporation: bool = False) -> None:
-        """Reevaluates the properties of the black hole as if `timespan` time had passed.<br>
-        This will reduce it's mass due to hawking radiation.
-        """
-        seconds = timespan.total_seconds() if isinstance(timespan, timedelta) else timespan
-
-        if seconds > self.evaporation_time:
-            target_time = 0
-            if warn_on_evaporation:
-                warnings.warn(f"The black hole has reached a mass of '0' in the process of warping {seconds} seconds (after {(100 * self.evaporation_time / seconds):.2f}%).")
-        else:
-            target_time = self.evaporation_time - seconds
-
-        self.mass = calculate(self.metric.evaporation_time, {t: target_time}, M)
+        return calculate(self.metric.evaporation_time, {M: self.mass}, τ)
 
     def __getattribute__(self, name):
         try:
