@@ -101,7 +101,7 @@ def calculate(
     precision: int = config.float_precision
 ) -> Expr | float | set[Expr | float]:
     
-    formulas: list[Expr | float] = solve(eq, unknown)
+    formulas: list[Expr] = solve(eq, unknown)
     solutions = [
         formula.evalf(
             n=precision,

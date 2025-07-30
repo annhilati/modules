@@ -3,7 +3,7 @@ from datetime import timedelta
 import warnings
 import re
 
-from sympy import sqrt
+from sympy import sqrt, Expr
 
 from blackholepy import formulas, config
 from blackholepy.formulas import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric
@@ -44,11 +44,11 @@ class BlackHole():
         if self.mass < 0:
             raise LawOfConservationOfEnergy(f"Negative mass contradicts the general theory of relativity.")
         
-        if abs(self.spin)   > (max_spin   := Float((G * self.mass) / c**2,                      precision=config.float_precision)):
-            raise CosmicCensorshipHypothesis(f"The amount of spin stated exceeds '{max_spin}' (meters) and therefore violates the cosmic censorship hypothesis.")
+        if abs(self.spin) > self._max_pos_spin:
+            raise CosmicCensorshipHypothesis(f"The amount of spin stated exceeds '{self._max_pos_spin}' (meters) and therefore violates the cosmic censorship hypothesis.")
         
-        if abs(self.charge) > (max_charge := Float((sqrt(4 * π * ε_0 * G) * self.mass).evalf(), precision=config.float_precision)):
-            raise CosmicCensorshipHypothesis(f"The amount of charge stated exceeds '{max_charge}' (coloumb) and therefore violates the cosmic censorship hypothesis.")
+        if abs(self.charge) > self._max_pos_charge:
+            raise CosmicCensorshipHypothesis(f"The amount of charge stated exceeds '{self._max_pos_charge}' (coloumb) and therefore violates the cosmic censorship hypothesis.")
 
         if not self.spin and not self.charge:
             self.metric = SchwarzschildMetric
@@ -83,6 +83,14 @@ class BlackHole():
     def charged(self) -> bool:
         "Whether the black hole has charge"
         return not self.charge == 0
+    
+    @property
+    def _max_pos_spin(self) -> float:
+        return Expr((G * self.mass) / c**2).evalf()
+    
+    @property
+    def _max_pos_charge(self) -> float:
+        return Expr(sqrt(4 * π * ε_0 * G) * self.mass).evalf()
     
     @property
     def angular_momentum(self) -> float:
