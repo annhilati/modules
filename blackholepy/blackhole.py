@@ -1,20 +1,18 @@
 from dataclasses import dataclass, field
 from datetime import timedelta
 import warnings
-import re
+import re as regex
 
-from sympy import sqrt, Expr
+from sympy import sqrt
 
 from blackholepy import formulas, config
 from blackholepy.formulas import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric
 from blackholepy.symbols import *
 from blackholepy.exceptions import *
 
-# Wrong result still
-#
-# def spin_from_spin_param(spin_param: float, mass: float, /):
-    # value = calculate(formulas.spin_parameter, {M: mass, a_param: spin_param}, J)[0]
-    # return calculate(formulas.spin_momentum, {M: mass, J: value}, a)[0]
+def spin_param(spin: float, mass: float) -> float:
+    "Calculate a black holes spin from its spin parameter"
+    return calculate(formulas.dimensionless_spin, {a_star: spin, M: mass}, a)
 
 @dataclass
 class BlackHole():
@@ -41,6 +39,7 @@ class BlackHole():
     "Collection of formulas that descripe the black holes properties"
 
     def __post_init__(self):
+
         if self.mass < 0:
             raise LawOfConservationOfEnergy(f"Negative mass contradicts the general theory of relativity.")
         
@@ -50,13 +49,13 @@ class BlackHole():
         if abs(self.charge) > self._max_pos_charge:
             raise CosmicCensorshipHypothesis(f"The amount of charge stated exceeds '{self._max_pos_charge}' (coloumb) and therefore violates the cosmic censorship hypothesis.")
 
-        if not self.spin and not self.charge:
+        if not self.spins and not self.charged:
             self.metric = SchwarzschildMetric
-        elif not self.spin and self.charge:
+        elif not self.spins and self.charged:
             self.metric = ReissnerNordströmMetric
-        elif self.spin and not self.charge:
+        elif self.spins and not self.charged:
             self.metric = KerrMetric
-        elif self.spin and self.charge:
+        elif self.spins and self.charged:
             self.metric = KerrNewmanMetric
 
     def advance_time(self, timespan: timedelta | float, /, warn_on_evaporation: bool = False) -> None:
@@ -86,11 +85,11 @@ class BlackHole():
     
     @property
     def _max_pos_spin(self) -> float:
-        return Expr((G * self.mass) / c**2).evalf()
+        return (G * self.mass) / c**2
     
     @property
     def _max_pos_charge(self) -> float:
-        return Expr(sqrt(4 * π * ε_0 * G) * self.mass).evalf()
+        return sqrt(4 * π * ε_0 * G) * self.mass
     
     @property
     def angular_momentum(self) -> float:
@@ -191,7 +190,7 @@ class BlackHole():
 
         except Exception as e:
             msg = str(e)
-            if match := re.search(r"cannot sympify object of type <class 'ellipsis'>", msg):
+            if match := regex.search(r"cannot sympify object of type <class 'ellipsis'>", msg):
                 raise NotImplementedError(f"'{name}' is not implemented for {self.metric} black holes yet")
             raise e
         
