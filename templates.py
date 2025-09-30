@@ -15,14 +15,27 @@ def identity(x: InputType, /):
 @dataclass(unsafe_hash=True)
 class Placeholder(Generic[InputType, RepresentedType]):
     """Class representing a placeholder in a template.
-    
-    ---
-    #### Usage
+
+    Usage
+    -------
     Use Placeholders in a Template's content, to leave the options for entering a value later without needing to remember the position.
     Specify a function, that will manipulate or validate the value put in later.
     ```
-    template = Template({"text": Placeholder("text", Tomato, some_Tomato_to_string_turning_function)})
+    template = Template(
+        {
+            "text": Placeholder("text", Tomato, some_Tomato_to_string_turning_function)
+        }
+    )
     ```
+
+    Parameter
+    ------------
+    key : str
+        An identifier for the placeholder
+    input_type : type
+        The type that can be put in to the placeholder
+    processor : Callable
+        A function that takes in a value of the type statet in the `input_type` parameter and returns something
     """
     
     key: str
@@ -43,8 +56,8 @@ class Placeholder(Generic[InputType, RepresentedType]):
 class Template(Generic[RepresentedType]):
     """Class representing a template.
     
-    ---
-    #### Usage
+    Usage
+    --------
     Use Templates to define complex nested structures with placeholders, that can be easily filled out.
     Supported nested types are list, dict, Template & Placeholder.
     ```
@@ -76,13 +89,16 @@ class Template(Generic[RepresentedType]):
     def fullfill(self, mapping: dict[str: Any]) -> RepresentedType:
         """Retunrs the Template's content with placeholders filled out
 
-        #### Parameters
-            - mapping (dict)
-                - k: Name of a string placeholder or Placeholder object
-                - v: Value to replace the placeholder with (Tuples will get unpacked automatically)
+        Parameter
+        -----
+        mapping : dict
+            Values for replacing any kind of placeholders<br>
+                - keys: Name of a string placeholder or Placeholder object<br>
+                - values: Value to replace the placeholder with (Tuples will get unpacked automatically)
 
-        #### Raises
-            - KeyError: If a placeholder key present in the templates content is missing in mapping
+        Raises
+        -------
+        KeyError : If a placeholder key present in the templates content is missing in mapping
         """
         work = self.content
         work = substitute_any_placeholders(work, mapping)
