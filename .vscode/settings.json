@@ -10,6 +10,9 @@
     },
     "hide-files.files": [
         "blackholepy/physics/__pycache__",
-        "blackholepy/__pycache__"
-    ]
+        "blackholepy/__pycache__",
+        ".vscode"
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": []
 }

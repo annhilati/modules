@@ -43,11 +43,11 @@ class BlackHole():
         if self.mass < 0:
             raise LawOfConservationOfEnergy(f"Negative mass contradicts the general theory of relativity.")
         
-        if abs(self.spin) > self._max_pos_spin:
-            raise CosmicCensorshipHypothesis(f"The amount of spin stated exceeds '{self._max_pos_spin}' (meters) and therefore violates the cosmic censorship hypothesis.")
+        if abs(self.spin) > self._max_allowed_spin:
+            raise CosmicCensorshipHypothesis(f"The amount of spin stated exceeds '{self._max_allowed_spin}' (meters) and therefore violates the cosmic censorship hypothesis.")
         
-        if abs(self.charge) > self._max_pos_charge:
-            raise CosmicCensorshipHypothesis(f"The amount of charge stated exceeds '{self._max_pos_charge}' (coloumb) and therefore violates the cosmic censorship hypothesis.")
+        if abs(self.charge) > self._max_allowed_charge:
+            raise CosmicCensorshipHypothesis(f"The amount of charge stated exceeds '{self._max_allowed_charge}' (coloumb) and therefore violates the cosmic censorship hypothesis.")
 
         if not self.spins and not self.charged:
             self.metric = SchwarzschildMetric
@@ -67,7 +67,7 @@ class BlackHole():
         if seconds > self.evaporation_time:
             target_time = 0
             if warn_on_evaporation:
-                warnings.warn(f"The black hole has reached a mass of '0' in the process of warping {seconds} seconds (after {(100 * self.evaporation_time / seconds):.2f}%).")
+                warnings.warn(f"The black hole has reached a mass of '0' in the process of advancing {seconds} seconds (after {(100 * self.evaporation_time / seconds):.2f}%).")
         else:
             target_time = self.evaporation_time - seconds
 
@@ -84,11 +84,11 @@ class BlackHole():
         return not self.charge == 0
     
     @property
-    def _max_pos_spin(self) -> float:
+    def _max_allowed_spin(self) -> float:
         return (G * self.mass) / c**2
     
     @property
-    def _max_pos_charge(self) -> float:
+    def _max_allowed_charge(self) -> float:
         return sqrt(4 * π * ε_0 * G) * self.mass
     
     @property

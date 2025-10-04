@@ -83,7 +83,7 @@ def calculate(
     unknown: Symbol,
     precision: int = config.float_precision,
     mode: Literal["single", "set"] = "single"
-) ->Expr | float: ...
+) -> Expr | float: ...
 @overload
 def calculate(
     eq: Equality,
