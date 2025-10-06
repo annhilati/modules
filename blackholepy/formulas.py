@@ -1,6 +1,6 @@
 from sympy import Equality, sqrt, solve, Symbol, Expr
 from dataclasses import dataclass
-from typing import overload, Literal
+from typing import Literal
 
 from blackholepy.symbols import *
 import blackholepy.config as config
@@ -75,23 +75,6 @@ dimensionless_spin: Equality = Equality(a_star, a / ((G * M) / c**2))
 irreducable_mass: Equality = Equality(M_irr, sqrt((c**4 * A) / (16 * pi * G**2)))
 
 entropy: Equality = Equality(S, (k_B * c**3 * A) / (4 * G * ℏ))
-
-@overload
-def calculate(
-    eq: Equality,
-    values: dict[Symbol, float],
-    unknown: Symbol,
-    precision: int = config.float_precision,
-    mode: Literal["single", "set"] = "single"
-) -> Expr | float: ...
-@overload
-def calculate(
-    eq: Equality,
-    values: dict[Symbol, float],
-    unknown: Symbol,
-    precision: int = config.float_precision,
-    mode: Literal["single", "set"] = "set"
-) -> set[Expr | float]: ...
 
 def calculate(
     eq: Equality,

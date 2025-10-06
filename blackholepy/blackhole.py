@@ -49,13 +49,13 @@ class BlackHole():
         if abs(self.charge) > self._max_allowed_charge:
             raise CosmicCensorshipHypothesis(f"The amount of charge stated exceeds '{self._max_allowed_charge}' (coloumb) and therefore violates the cosmic censorship hypothesis.")
 
-        if not self.spins and not self.charged:
+        if   not self.spins and not self.charged:
             self.metric = SchwarzschildMetric
-        elif not self.spins and self.charged:
+        elif not self.spins and     self.charged:
             self.metric = ReissnerNordströmMetric
-        elif self.spins and not self.charged:
+        elif     self.spins and not self.charged:
             self.metric = KerrMetric
-        elif self.spins and self.charged:
+        elif     self.spins and     self.charged:
             self.metric = KerrNewmanMetric
 
     def _calc_property(self, eq: Equality, unknown: Symbol, overwrite: dict[Symbol, float] = {}) -> float:
@@ -96,6 +96,7 @@ class BlackHole():
         """
         seconds = timespan.total_seconds()
 
+        # Hawking Radiation
         if seconds > self.evaporation_time:
             target_time = 0
             if warn_on_evaporation:
@@ -106,6 +107,10 @@ class BlackHole():
         self.mass = self._calc_property(self.metric.evaporation_time, M, {τ: target_time})
 
         # Calculations for spin and charge missing
+
+    def feed(self, mass: float, /) -> None:
+        """Increases the black holes mass the given amount."""
+        self.mass += mass
     
     @property
     def spins(self) -> bool:
@@ -140,11 +145,6 @@ class BlackHole():
 
         outer = None
         inner = None
-        map = {
-            M: self.mass,
-            Q: self.charge,
-            a: self.spin
-        }
        
         outer = self._calc_property(self.metric.r_plus, r_plus)
         if self.metric.r_minus is not None:
@@ -186,7 +186,7 @@ class BlackHole():
     @property
     def density(self) -> float:
         "Density of the black hole"
-        return Float(self.mass) / Float(self.volume)
+        return self._calc_property(Equality(ρ, M / V), ρ, {V: self.volume})
     
     @property
     def surface_gravity(self) -> float:
@@ -225,7 +225,11 @@ class BlackHole():
         except Exception as e:
             msg = str(e)
             if match := regex.search(r"cannot sympify object of type <class 'ellipsis'>", msg):
-                raise NotImplementedError(f"Calculation of '{name}' has not yet been implemented for {self.metric} black holes")
+                raise NotImplementedError(
+                    f"Calculation of '{name}' has not yet been implemented for {self.metric} black holes.\n" + 
+                    f"It is not definitely stated, but this is most certainly the case, because the dependencies of the parameters are non-trivial "
+                    f"and thus, a calculation process would be very complex."
+                )
             raise e
         
         return value
