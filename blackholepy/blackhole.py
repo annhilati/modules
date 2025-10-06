@@ -3,7 +3,7 @@ from datetime import timedelta
 import warnings
 import re as regex
 
-from sympy import sqrt
+from sympy import sqrt, Equality, solve
 
 from blackholepy import formulas, config
 from blackholepy.formulas import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric
@@ -24,7 +24,7 @@ class BlackHole():
     charge : coloumb as float
     spin : meter as float
         The Metric required here is the 'Kerr-parameter' *a*, messured in meters.<br>
-        Not to be confused with the spin parameter *a*<sub>*</sub> (in [0, 1]) or the angular momentum *J* (kg m^2 / s).
+        Not to be confused with the spin parameter *a*<sub>*</sub> (between 0 and 1) or the angular momentum *J* (in kg m^2 / s).
 
     Raises
     ----------
@@ -58,20 +58,54 @@ class BlackHole():
         elif self.spins and self.charged:
             self.metric = KerrNewmanMetric
 
-    def advance_time(self, timespan: timedelta | float, /, warn_on_evaporation: bool = False) -> None:
+    def _calc_property(self, eq: Equality, unknown: Symbol, overwrite: dict[Symbol, float] = {}) -> float:
+
+        getters = {
+            r_minus: lambda: self.innerHorizon,
+            r_plus:  lambda: self.outerHorizon,
+            R:       lambda: self.radius,
+            M:       lambda: self.mass,
+            a:       lambda: self.spin,
+            Q:       lambda: self.charge,
+            A:       lambda: self.horizon_area,
+            κ:       lambda: self.surface_gravity
+        }
+
+        getters.update({k: (lambda v=v: v) for k, v in overwrite.items()})
+
+        solved = solve(eq, unknown)
+        if not solved:
+            raise FaultyImplementation(f"Cannot solve equation for {unknown}: {eq}")
+
+        needed_symbols = solved[0].free_symbols
+
+        values = {}
+        for symbol, getter in getters.items():
+            if symbol in needed_symbols and symbol != unknown:
+                try:
+                    values[symbol] = getter()
+                except RecursionError:
+                    values[symbol] = None
+
+        return calculate(eq=eq, values=values, unknown=unknown, mode="single")
+
+
+    def advance_time(self, timespan: timedelta, /, warn_on_evaporation: bool = False) -> None:
         """Reevaluates the properties of the black hole as if `timespan` time had passed.<br>
         This will reduce it's mass due to hawking radiation.
         """
-        seconds = timespan.total_seconds() if isinstance(timespan, timedelta) else timespan
+        seconds = timespan.total_seconds()
 
         if seconds > self.evaporation_time:
             target_time = 0
             if warn_on_evaporation:
-                warnings.warn(f"The black hole has reached a mass of '0' in the process of advancing {seconds} seconds (after {(100 * self.evaporation_time / seconds):.2f}%).")
+                warnings.warn(f"The black hole evaporated in the process of advancing {seconds} seconds (after {(100 * self.evaporation_time / seconds):.2f}%).")
         else:
             target_time = self.evaporation_time - seconds
 
-        self.mass = calculate(self.metric.evaporation_time, {τ: target_time}, M)
+        self.mass = self._calc_property(self.metric.evaporation_time, M, {τ: target_time})
+
+        # Calculations for spin and charge missing
     
     @property
     def spins(self) -> bool:
@@ -94,12 +128,12 @@ class BlackHole():
     @property
     def angular_momentum(self) -> float:
         "Angular momentum of the black hole"
-        return calculate(formulas.spin_momentum, {a: self.spin, M: self.mass}, J)
+        return self._calc_property(formulas.spin_momentum, J)
     
     @property
     def dimless_spin(self) -> float:
         ""
-        return calculate(formulas.dimensionless_spin, {a: self.spin, M: self.mass}, a_star)
+        return self._calc_property(formulas.dimensionless_spin, a_star)
     
     @property
     def horizons(self) -> tuple[float, float | None]:
@@ -112,9 +146,9 @@ class BlackHole():
             a: self.spin
         }
        
-        outer = calculate(self.metric.r_plus, map, r_plus)
+        outer = self._calc_property(self.metric.r_plus, r_plus)
         if self.metric.r_minus is not None:
-            inner = calculate(self.metric.r_minus, map, r_minus)
+            inner = self._calc_property(self.metric.r_minus, r_minus)
         return (outer, inner)
     
     @property
@@ -138,7 +172,7 @@ class BlackHole():
         Area of the black hole's outermost event horizon<br>
         This area can be larger than the surface area of a sphere with the black hole's radius.
         """
-        return calculate(self.metric.horizon_area, {r_plus: self.outerHorizon, a: self.spin}, A)
+        return self._calc_property(self.metric.horizon_area, A)
 
     @property
     def volume(self) -> float:
@@ -157,17 +191,17 @@ class BlackHole():
     @property
     def surface_gravity(self) -> float:
         "Surface gravity of the black hole"
-        return calculate(self.metric.surface_gravity, {M: self.mass, r_plus: self.outerHorizon, r_minus: self.innerHorizon, a: self.spin, Q: self.charge}, κ)
+        return self._calc_property(self.metric.surface_gravity, κ)
     
     @property
     def temperature(self) -> float:
         "Hawking temperature of the black hole"
-        return calculate(self.metric.hawking_temperature, {κ: self.surface_gravity}, T_H)
+        return self._calc_property(self.metric.hawking_temperature, T_H)
     
     @property
     def irreducable_mass(self) -> float:
         "Gravitational mass of the black hole that can't be reduced through any process"
-        return calculate(formulas.irreducable_mass, {A: self.horizon_area}, M_irr)
+        return self._calc_property(formulas.irreducable_mass, M_irr)
     
     # @property
     # def reducable_mass(self) -> float:
@@ -177,12 +211,12 @@ class BlackHole():
     @property
     def hawking_power(self) -> float:
         "Power of the black hole's Hawking radiation"
-        return calculate(self.metric.hawking_power, {M: self.mass}, P)
+        return self._calc_property(self.metric.hawking_power, P)
     
     @property
     def evaporation_time(self) -> float:
         "Amount of time until the black hole will have completely evaporated"
-        return calculate(self.metric.evaporation_time, {M: self.mass}, τ)
+        return self._calc_property(self.metric.evaporation_time, τ)
 
     def __getattribute__(self, name):
         try:
@@ -191,7 +225,7 @@ class BlackHole():
         except Exception as e:
             msg = str(e)
             if match := regex.search(r"cannot sympify object of type <class 'ellipsis'>", msg):
-                raise NotImplementedError(f"'{name}' is not implemented for {self.metric} black holes yet")
+                raise NotImplementedError(f"Calculation of '{name}' has not yet been implemented for {self.metric} black holes")
             raise e
         
         return value

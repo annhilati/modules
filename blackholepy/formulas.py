@@ -50,7 +50,7 @@ KerrMetric = BlackHoleMetric(
     name                    = "Kerr metric",
     r_plus                  = Equality(r_plus, ((G * M) / c**2) + (sqrt(((G * M) / c**2)**2 - a**2))),
     r_minus                 = Equality(r_minus, ((G * M) / c**2) - (sqrt(((G * M) / c**2)**2 - a**2))),
-    surface_gravity         = Equality(κ, (c**4 * sqrt(G**2 * M**2 - a**2 * c**2)) / (2 * G * M * (((G * M) / c**2 + sqrt(((G * M) / c**2)**2 - (a**2 / c**2)))**2 + a**2))),
+    surface_gravity         = Equality(κ, c**2 * sqrt(((G * M) / c**2)**2 - a**2) / (r_plus**2 + a**2)),
     horizon_area            = Equality(A, 4 * pi * (r_plus**2 + a**2)),
     hawking_temperature     = Equality(T_H, ((ℏ * c**3) / (2 * pi * k_B * G * M)) * ((sqrt(1 - a_star**2)) / (1 + sqrt(1 - a_star**2)))),
     hawking_power           = ...,
@@ -107,9 +107,9 @@ def calculate(
             n=precision,
             maxn=300,
             subs={
-                symbol: value
-                for symbol, value in values.items()
-                if value is not None
+                    symbol: value
+                    for symbol, value in values.items()
+                    if value is not None
                 }
         )
         for formula in formulas

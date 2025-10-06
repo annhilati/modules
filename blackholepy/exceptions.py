@@ -9,3 +9,6 @@ class CosmicCensorshipHypothesis(BlackHolePyError):
 class LawOfConservationOfEnergy(BlackHolePyError):
     "Raised when certain parameters violate the law of conservation of energy."
     ...
+
+class FaultyImplementation(BlackHolePyError):
+    ...

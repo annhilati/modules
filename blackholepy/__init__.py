@@ -1,7 +1,6 @@
 from blackholepy.blackhole import BlackHole
-import blackholepy.config as config
 
-_symbols = [BlackHole, config]
+_symbols = [BlackHole]
 _constants = []
 
 __all__ = [obj.__name__ for obj in _symbols].extend(_constants)
