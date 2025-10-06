@@ -1,3 +1,3 @@
-float_precision: int = 11
+float_precision: int = 50
 """
 """

@@ -5,7 +5,7 @@ from typing import Literal
 from blackholepy.symbols import *
 import blackholepy.config as config
 
-@dataclass
+@dataclass(eq=True)
 class BlackHoleMetric():
     """Class representing a set of formulas rigarding properties of black holes, result from a solution to the Einstein field equations and are true under certain circumstances."""
     
@@ -84,19 +84,22 @@ def calculate(
     precision: int = config.float_precision
 ) -> Expr | float | set[Expr | float]:
     
+    
+    # 1. Lösen der Gleichung symbolisch
     formulas: list[Expr] = solve(eq, unknown)
-    solutions = [
-        formula.evalf(
-            n=precision,
-            maxn=300,
-            subs={
-                    symbol: value
-                    for symbol, value in values.items()
-                    if value is not None
-                }
-        )
+
+    # 2. Substitution: nur wenn Wert gegeben, behalte symbolisch falls möglich
+    substituted = [
+        formula.subs({s: v for s, v in values.items() if v is not None})
         for formula in formulas
     ]
+
+    # 3. Numerische Auswertung optional und mit hoher Präzision
+    evaluated = [
+        f.evalf(n=precision, maxn=300) if f.free_symbols == set() else f
+        for f in substituted
+    ]
+
     if mode == "single":
-        return solutions[0]
-    return set(solutions)
+        return evaluated[0]
+    return set(evaluated)

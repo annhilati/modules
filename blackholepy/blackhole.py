@@ -21,10 +21,10 @@ class BlackHole():
     Parameters
     ----------
     mass : kilogram as float
-    charge : coloumb as float
     spin : meter as float
         The Metric required here is the 'Kerr-parameter' *a*, messured in meters.<br>
         Not to be confused with the spin parameter *a*<sub>*</sub> (between 0 and 1) or the angular momentum *J* (in kg m^2 / s).
+    charge : coloumb as float
 
     Raises
     ----------
@@ -32,13 +32,16 @@ class BlackHole():
     LawOfConservationOfEnergy : If parameters cause behavior that would destroy energy or create it out of nothing
     """
         
-    mass:   float
-    charge: float           = 0
-    spin:   float           = 0
+    mass:   Float
+    spin:   Float           = 0
+    charge: Float           = 0
     metric: BlackHoleMetric = field(init=False)
     "Collection of formulas that descripe the black holes properties"
 
     def __post_init__(self):
+        self.mass = Float(self.mass, config.float_precision)
+        self.spin = Float(self.spin, config.float_precision)
+        self.charge = Float(self.charge, config.float_precision)
 
         if self.mass < 0:
             raise LawOfConservationOfEnergy(f"Negative mass contradicts the general theory of relativity.")
@@ -65,6 +68,7 @@ class BlackHole():
             r_plus:  lambda: self.outerHorizon,
             R:       lambda: self.radius,
             M:       lambda: self.mass,
+            M_irr:   lambda: self.irreducible_mass, 
             a:       lambda: self.spin,
             Q:       lambda: self.charge,
             A:       lambda: self.horizon_area,
@@ -108,6 +112,29 @@ class BlackHole():
 
         # Calculations for spin and charge missing
 
+    def penrose_process(self, delta_J: float, /, warn_on_extremal: bool = True) -> None:
+        """Applies a Penrose-like rotational energy extraction by reducing the spin angular momentum J.
+
+        Parameters
+        ----------
+        delta_J : float
+            The amount of angular momentum to remove (in SI units, kg·m²/s).
+        warn_on_extremal : bool, optional
+            Warn if process would push the black hole below Schwarzschild limit (a < 0).
+        """
+
+        J_initial = self.angular_momentum
+
+        J_final = J_initial - delta_J
+        if J_final < 0:
+            if warn_on_extremal:
+                warnings.warn("Penrose process would overshoot: J < 0 — limiting to Schwarzschild.")
+            J_final = 0.0
+
+        self.spin = self._calc_property(formulas.spin_momentum, a, overwrite={J: J_final})
+        self.mass = self._calc_property(Equality(M, sqrt(M_irr**2 + (J_final**2 * c**2) / (4 * G**2 * M_irr**2))), M)
+
+
     def feed(self, mass: float, /) -> None:
         """Increases the black holes mass the given amount."""
         self.mass += mass
@@ -143,13 +170,10 @@ class BlackHole():
     @property
     def horizons(self) -> tuple[float, float | None]:
 
-        outer = None
-        inner = None
-       
-        outer = self._calc_property(self.metric.r_plus, r_plus)
-        if self.metric.r_minus is not None:
-            inner = self._calc_property(self.metric.r_minus, r_minus)
-        return (outer, inner)
+        return (
+            self._calc_property(self.metric.r_plus, r_plus),
+            self._calc_property(self.metric.r_minus, r_minus) if self.metric.r_minus is not None else None
+        )
     
     @property
     def innerHorizon(self) -> float | None:
@@ -199,14 +223,15 @@ class BlackHole():
         return self._calc_property(self.metric.hawking_temperature, T_H)
     
     @property
-    def irreducable_mass(self) -> float:
-        "Gravitational mass of the black hole that can't be reduced through any process"
+    def irreducible_mass(self) -> float:
+        "Gravitational mass of the black hole that isn't a side effect of spin or charge"
+        # raise FaultyImplementation("Can't be calculated because float precision")
         return self._calc_property(formulas.irreducable_mass, M_irr)
     
-    # @property
-    # def reducable_mass(self) -> float:
-    #     "Gravitational mass of the black hole that can be reduced through some process"
-    #     return Float(self.mass) - Float(self.irreducable_mass)
+    @property
+    def reducable_mass(self) -> float:
+        "Gravitational mass of the black hole that is a side effect of spin or charge and thus can be extracted by a Penrose process or magnetic extraction"
+        return Float(self.mass, precision=config.float_precision) - self.irreducible_mass
     
     @property
     def hawking_power(self) -> float:
