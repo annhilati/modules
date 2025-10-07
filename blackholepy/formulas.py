@@ -82,24 +82,31 @@ def calculate(
     unknown: Symbol,
     mode: Literal["single", "set"] = "single",
     precision: int = config.float_precision
-) -> Expr | float | set[Expr | float]:
+) -> Expr | set[Expr | float]:
     
     
     # 1. Lösen der Gleichung symbolisch
     formulas: list[Expr] = solve(eq, unknown)
 
-    # 2. Substitution: nur wenn Wert gegeben, behalte symbolisch falls möglich
     substituted = [
         formula.subs({s: v for s, v in values.items() if v is not None})
         for formula in formulas
     ]
 
-    # 3. Numerische Auswertung optional und mit hoher Präzision
     evaluated = [
-        f.evalf(n=precision, maxn=300) if f.free_symbols == set() else f
+        f if f.free_symbols == set() else f
         for f in substituted
     ]
 
     if mode == "single":
         return evaluated[0]
     return set(evaluated)
+
+def approx(expr: Expr, precision: int = config.float_precision):
+    return expr.evalf(
+        n=precision,
+        subs=constants,
+        strict=True,
+        verbose=False,
+        maxn=300
+    )

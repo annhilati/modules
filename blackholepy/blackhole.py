@@ -3,10 +3,10 @@ from datetime import timedelta
 import warnings
 import re as regex
 
-from sympy import sqrt, Equality, solve
+from sympy import sqrt, Equality, solve, Expr
 
 from blackholepy import formulas, config
-from blackholepy.formulas import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric
+from blackholepy.formulas import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric, approx
 from blackholepy.symbols import *
 from blackholepy.exceptions import *
 
@@ -39,17 +39,17 @@ class BlackHole():
     "Collection of formulas that descripe the black holes properties"
 
     def __post_init__(self):
-        self.mass = Float(self.mass, config.float_precision)
-        self.spin = Float(self.spin, config.float_precision)
-        self.charge = Float(self.charge, config.float_precision)
+        # self.mass = Float(self.mass, config.float_precision)
+        # self.spin = Float(self.spin, config.float_precision)
+        # self.charge = Float(self.charge, config.float_precision)
 
         if self.mass < 0:
             raise LawOfConservationOfEnergy(f"Negative mass contradicts the general theory of relativity.")
         
-        if abs(self.spin) > self._max_allowed_spin:
+        if abs(self.spin) > approx(self._max_allowed_spin):
             raise CosmicCensorshipHypothesis(f"The amount of spin stated exceeds '{self._max_allowed_spin}' (meters) and therefore violates the cosmic censorship hypothesis.")
         
-        if abs(self.charge) > self._max_allowed_charge:
+        if abs(self.charge) > approx(self._max_allowed_charge):
             raise CosmicCensorshipHypothesis(f"The amount of charge stated exceeds '{self._max_allowed_charge}' (coloumb) and therefore violates the cosmic censorship hypothesis.")
 
         if   not self.spins and not self.charged:
@@ -61,7 +61,8 @@ class BlackHole():
         elif     self.spins and     self.charged:
             self.metric = KerrNewmanMetric
 
-    def _calc_property(self, eq: Equality, unknown: Symbol, overwrite: dict[Symbol, float] = {}) -> float:
+    def _calc_property(self, eq: Equality, unknown: Symbol, overwrite: dict[Symbol, float] = {}) -> Expr:
+        "unknown will not be substitued with a known value"
 
         getters = {
             r_minus: lambda: self.innerHorizon,
@@ -151,24 +152,24 @@ class BlackHole():
     
     @property
     def _max_allowed_spin(self) -> float:
-        return (G * self.mass) / c**2
+        return self._calc_property(Equality(a, (G * M) / c**2), a)
     
     @property
     def _max_allowed_charge(self) -> float:
-        return sqrt(4 * π * ε_0 * G) * self.mass
+        return self._calc_property(Equality(Q, sqrt(4 * π * ε_0 * G) * M), Q)
     
     @property
-    def angular_momentum(self) -> float:
+    def angular_momentum(self) -> Expr:
         "Angular momentum of the black hole"
         return self._calc_property(formulas.spin_momentum, J)
     
     @property
-    def dimless_spin(self) -> float:
+    def dimless_spin(self) -> Expr:
         ""
         return self._calc_property(formulas.dimensionless_spin, a_star)
     
     @property
-    def horizons(self) -> tuple[float, float | None]:
+    def horizons(self) -> tuple[Expr, Expr | None]:
 
         return (
             self._calc_property(self.metric.r_plus, r_plus),
@@ -176,22 +177,22 @@ class BlackHole():
         )
     
     @property
-    def innerHorizon(self) -> float | None:
+    def innerHorizon(self) -> Expr | None:
         "Radius of the black holes inner event horizon"
         return self.horizons[1]
     
     @property
-    def outerHorizon(self) -> float:
+    def outerHorizon(self) -> Expr:
         "Radius of the black holes outer event horizon"
         return self.horizons[0]
     
     @property
-    def radius(self) -> float:
+    def radius(self) -> Expr:
         "Radius of the black hole given by the outermost event horizon"
         return self.outerHorizon
     
     @property
-    def horizon_area(self) -> float:
+    def horizon_area(self) -> Expr:
         """
         Area of the black hole's outermost event horizon<br>
         This area can be larger than the surface area of a sphere with the black hole's radius.
@@ -199,47 +200,47 @@ class BlackHole():
         return self._calc_property(self.metric.horizon_area, A)
 
     @property
-    def volume(self) -> float:
+    def volume(self) -> Expr:
         """Volume of the black hole<br>
         This volume can be larger than the volume of a sphere with the black hole's radius.
         """
         if not self.metric == SchwarzschildMetric:
             warnings.warn("Volume calculation for black holes that aren't of the Schwarzschild metric is only approximated.")
-        return (self.radius**3 * π * 4/3)
+        return self._calc_property(Equality(V, R**3 * π * 4/3), V)
 
     @property
-    def density(self) -> float:
+    def density(self) -> Expr:
         "Density of the black hole"
         return self._calc_property(Equality(ρ, M / V), ρ, {V: self.volume})
     
     @property
-    def surface_gravity(self) -> float:
+    def surface_gravity(self) -> Expr:
         "Surface gravity of the black hole"
         return self._calc_property(self.metric.surface_gravity, κ)
     
     @property
-    def temperature(self) -> float:
+    def temperature(self) -> Expr:
         "Hawking temperature of the black hole"
         return self._calc_property(self.metric.hawking_temperature, T_H)
     
     @property
-    def irreducible_mass(self) -> float:
+    def irreducible_mass(self) -> Expr:
         "Gravitational mass of the black hole that isn't a side effect of spin or charge"
         # raise FaultyImplementation("Can't be calculated because float precision")
         return self._calc_property(formulas.irreducable_mass, M_irr)
     
     @property
-    def reducable_mass(self) -> float:
+    def reducable_mass(self) -> Expr:
         "Gravitational mass of the black hole that is a side effect of spin or charge and thus can be extracted by a Penrose process or magnetic extraction"
-        return Float(self.mass, precision=config.float_precision) - self.irreducible_mass
+        return self.mass - self.irreducible_mass
     
     @property
-    def hawking_power(self) -> float:
+    def hawking_power(self) -> Expr:
         "Power of the black hole's Hawking radiation"
         return self._calc_property(self.metric.hawking_power, P)
     
     @property
-    def evaporation_time(self) -> float:
+    def evaporation_time(self) -> Expr:
         "Amount of time until the black hole will have completely evaporated"
         return self._calc_property(self.metric.evaporation_time, τ)
 

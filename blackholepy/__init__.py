@@ -6,8 +6,9 @@
 #
 
 from blackholepy.blackhole import BlackHole
+from blackholepy.formulas import approx
 
-_symbols = [BlackHole]
+_symbols = [BlackHole, approx]
 _constants = []
 
 __all__ = [obj.__name__ for obj in _symbols].extend(_constants)
