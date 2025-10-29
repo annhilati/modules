@@ -37,7 +37,7 @@ class BlackHole():
     charge: Float           = 0
     metric: BlackHoleMetric = field(init=False)
     "Collection of formulas that descripe the black holes properties"
-    fix_metric              = field(init=False, default=False)
+    fix_metric: bool        = field(init=False, default=False)
 
     def __post_init__(self):
         # self.mass = Float(self.mass, config.float_precision)

@@ -6,12 +6,15 @@
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
         "blackholepy/physics/__pycache__": true,
-        "blackholepy/__pycache__": true
+        "blackholepy/__pycache__": true,
+        ".vscode": true,
+        "ametrine/__pycache__": true
     },
     "hide-files.files": [
         "blackholepy/physics/__pycache__",
         "blackholepy/__pycache__",
-        ".vscode"
+        ".vscode",
+        "ametrine/__pycache__"
     ],
     "python-envs.defaultEnvManager": "ms-python.python:system",
     "python-envs.pythonProjects": []
