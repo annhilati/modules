@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from ametrine.rational import rational
 
@@ -46,7 +48,7 @@ class algebraic:
         return len(self.coefficients) - 1
 
 @dataclass
-class radical(algebraic):
+class root(algebraic):
     radicand:       rational
     exponent:       rational
     coefficients:   list[int]   = field(init=False)
@@ -57,6 +59,21 @@ class radical(algebraic):
 
     def __repr__(self) -> str:
         return super().__repr__()
+
+    def __mul__(self, other) -> root:
+        if isinstance(other, root) and other.exponent == self.exponent:
+            return root(
+                radicand=self.radicand * other.radicand,
+                exponent=self.exponent
+            )
+        
+    def __truediv__(self, other) -> root:
+        if isinstance(other, root) and other.exponent == self.exponent:
+            return root(
+                radicand=self.radicand / other.radicand,
+                exponent=self.exponent
+            )
+
 
 def algebraic_from_root(r: rational | algebraic | int, e: int | rational):
 

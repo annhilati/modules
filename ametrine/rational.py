@@ -101,7 +101,6 @@ class rational:
             non_repeating = digits[:repeating_start]
             repeating = digits[repeating_start:]
 
-        # abschließende Nullen entfernen (nur aus dem nichtperiodischen Teil)
         while non_repeating and non_repeating[-1] == 0 and not repeating:
             non_repeating.pop()
 
