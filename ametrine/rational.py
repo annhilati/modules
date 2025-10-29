@@ -41,10 +41,7 @@ class rational:
         return f"{self.numerator}/{self.denominator}"
     
     def __add__(self, other):
-        try:
-            other = simplify(other)
-        except TypeError:
-            raise TypeError(f"Unknown numeric type: '{type(other).__name__}'")
+        other = simplify(other)
         if isinstance(other, rationalComprehendable):
             other = rational.comprehend(other)
             return rational(
@@ -56,12 +53,31 @@ class rational:
                 
     def __radd__(self, other):
         return self.__add__(other)
+    
+    def __sub__(self, other):
+        other = simplify(other)
+        if isinstance(other, rationalComprehendable):
+            other = rational.comprehend(other)
+            return rational(
+                numerator=self.numerator * other.denominator - other.numerator * self.denominator,
+                denominator=self.denominator * other.denominator
+            )
+        else:
+            raise NotImplementedError
+        
+    def __rsub__(self, other):
+        other = simplify(other)
+        if isinstance(other, rationalComprehendable):
+            other = rational.comprehend(other)
+            return rational(
+                numerator=other.numerator * self.denominator - self.numerator * other.denominator,
+                denominator=self.denominator * other.denominator
+            )
+        else:
+            raise NotImplementedError
         
     def __mul__(self, other):
-        try:
-            other = simplify(other)
-        except TypeError:
-            raise TypeError(f"Unknown numeric type: '{type(other).__name__}'")
+        other = simplify(other)
         if isinstance(other, rationalComprehendable):
             other = rational.comprehend(other)
             return rational(
@@ -74,11 +90,30 @@ class rational:
     def __rmul__(self, other):
         return self.__mul__(other)
         
+    def __truediv__(self, other):
+        other = simplify(other)
+        if isinstance(other, rationalComprehendable):
+            other = rational.comprehend(other)
+            return rational(
+                numerator=self.numerator * other.denominator,
+                denominator=self.denominator * other.numerator
+            )
+        else:
+            raise NotImplementedError
+        
+    def __rtruediv__(self, other):
+        other = simplify(other)
+        if isinstance(other, rationalComprehendable):
+            other = rational.comprehend(other)
+            return rational(
+                numerator=other.numerator * self.denominator,
+                denominator=other.denominator * self.numerator
+            )
+        else:
+            raise NotImplementedError
+        
     def __pow__(self, exponent):
-        try:
-            exponent = simplify(exponent)
-        except TypeError:
-            raise TypeError(f"Unknown numeric type: '{type(exponent).__name__}'")
+        exponent = simplify(exponent)
         # if isinstance(exponent, float):
         #     exponent = rational.comprehend(exponent)
         if isinstance(exponent, int):
@@ -88,13 +123,35 @@ class rational:
             )
         elif isinstance(exponent, rational):
             from ametrine.algebraic import root
-            return root(
+            return simplify(root(
                 radicand=self ** exponent.numerator,
                 exponent=exponent.denominator
+            ))
+        else:
+            raise NotImplementedError
+        
+    def __rpow__(self, base):
+        base = simplify(base)
+        # if isinstance(exponent, float):
+        #     exponent = rational.comprehend(exponent)
+        if isinstance(base, int) or isinstance(base, rational):
+            from ametrine.algebraic import root
+            return root(
+                radicand=base ** self.numerator,
+                exponent=self.denominator
             )
         else:
             raise NotImplementedError
-
+        
+    def __eq__(self, value):
+        value = simplify(value)
+        if isinstance(value, rational):
+            return self.numerator == value.numerator and self.denominator == value.denominator
+        elif isinstance(value, rationalComprehendable):
+            value = rational.comprehend(value)
+            return self.numerator == value.numerator and self.denominator == value.denominator
+        else:
+            raise NotImplementedError(type(value))
         
     @property
     def negative(self) -> bool:

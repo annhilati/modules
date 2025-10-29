@@ -40,7 +40,7 @@ def simplify(obj: T) -> T | Any:
 
         else:
             raise TypeError(
-                f"Type '{t.__name__}' not supported and has no simplify()"
+                f"Unknown numeric type: '{type(obj).__name__}'"
             )
 
     return obj
