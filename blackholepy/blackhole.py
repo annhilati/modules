@@ -37,6 +37,7 @@ class BlackHole():
     charge: Float           = 0
     metric: BlackHoleMetric = field(init=False)
     "Collection of formulas that descripe the black holes properties"
+    fix_metric              = field(init=False, default=False)
 
     def __post_init__(self):
         # self.mass = Float(self.mass, config.float_precision)
@@ -52,14 +53,18 @@ class BlackHole():
         if abs(self.charge) > approx(self._max_allowed_charge):
             raise CosmicCensorshipHypothesis(f"The amount of charge stated exceeds '{self._max_allowed_charge}' (coloumb) and therefore violates the cosmic censorship hypothesis.")
 
-        if   not self.spins and not self.charged:
-            self.metric = SchwarzschildMetric
-        elif not self.spins and     self.charged:
-            self.metric = ReissnerNordströmMetric
-        elif     self.spins and not self.charged:
-            self.metric = KerrMetric
-        elif     self.spins and     self.charged:
-            self.metric = KerrNewmanMetric
+        self._evaluate_metric()
+
+    def _evaluate_metric(self) -> None:
+        if not self.fix_metric:
+            if   not self.spins and not self.charged:
+                self.metric = SchwarzschildMetric
+            elif not self.spins and     self.charged:
+                self.metric = ReissnerNordströmMetric
+            elif     self.spins and not self.charged:
+                self.metric = KerrMetric
+            elif     self.spins and     self.charged:
+                self.metric = KerrNewmanMetric
 
     def _calc_property(self, eq: Equality, unknown: Symbol, overwrite: dict[Symbol, float] = {}) -> Expr:
         "unknown will not be substitued with a known value"
