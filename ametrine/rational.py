@@ -3,10 +3,13 @@ from dataclasses import dataclass
 
 from math import gcd, frexp
 
+from ametrine.ausgelagert import simplify
+
+
 @dataclass
 class rational:
     numerator:      int
-    denominator:    int
+    denominator:    int = 1
 
     def __post_init__(self) -> None:
         if not isinstance(self.numerator, int) or not isinstance(self.denominator, int):
@@ -22,9 +25,15 @@ class rational:
         self.denominator = self.denominator // g
 
     @classmethod
-    def comprehend(cls, v: float) -> rational:
-        n, d = float_to_rational(v)
-        return cls(n, d)
+    def comprehend(cls, obj: rationalComprehendable) -> rational:
+        "Don't use floats that are meant to be periodically"
+        if isinstance(obj, int):
+            return cls(obj, 1)
+        elif isinstance(obj, float):
+            n, d = float_to_rational(obj)
+            return cls(n, d)
+        elif isinstance(obj, rational):
+            return cls(obj.numerator, obj.denominator)
 
     def __repr__(self) -> str:
         if self.denominator == 1:
@@ -32,32 +41,60 @@ class rational:
         return f"{self.numerator}/{self.denominator}"
     
     def __add__(self, other):
-        if isinstance(other, rational):
+        try:
+            other = simplify(other)
+        except TypeError:
+            raise TypeError(f"Unknown numeric type: '{type(other).__name__}'")
+        if isinstance(other, rationalComprehendable):
+            other = rational.comprehend(other)
             return rational(
                 numerator=self.numerator * other.denominator + other.numerator * self.denominator,
                 denominator=self.denominator * other.denominator
             )
-        elif isinstance(other, int):
-            return rational(
-                numerator=self.numerator + other * self.denominator,
-                denominator=self.denominator
-            )
         else:
-            raise TypeError
+            raise NotImplementedError
+                
+    def __radd__(self, other):
+        return self.__add__(other)
         
     def __mul__(self, other):
-        if isinstance(other, rational):
+        try:
+            other = simplify(other)
+        except TypeError:
+            raise TypeError(f"Unknown numeric type: '{type(other).__name__}'")
+        if isinstance(other, rationalComprehendable):
+            other = rational.comprehend(other)
             return rational(
                 numerator=self.numerator * other.numerator,
                 denominator=self.denominator * other.denominator
             )
-        elif isinstance(other, int):
+        else:
+            raise NotImplementedError
+        
+    def __rmul__(self, other):
+        return self.__mul__(other)
+        
+    def __pow__(self, exponent):
+        try:
+            exponent = simplify(exponent)
+        except TypeError:
+            raise TypeError(f"Unknown numeric type: '{type(exponent).__name__}'")
+        # if isinstance(exponent, float):
+        #     exponent = rational.comprehend(exponent)
+        if isinstance(exponent, int):
             return rational(
-                numerator=self.numerator * other,
-                denominator=self.denominator
+                numerator=self.numerator ** exponent,
+                denominator=self.denominator ** exponent
+            )
+        elif isinstance(exponent, rational):
+            from ametrine.algebraic import root
+            return root(
+                radicand=self ** exponent.numerator,
+                exponent=exponent.denominator
             )
         else:
-            raise TypeError
+            raise NotImplementedError
+
         
     @property
     def negative(self) -> bool:
@@ -70,6 +107,11 @@ class rational:
             while d % p == 0:
                 d //= p
         return d != 1
+    
+    def simplify(self) -> rational | int:
+        if self.denominator == 1:
+            return self.numerator
+        return self
     
     def to_decimal_parts(self) -> tuple[int, int, int]:
         "Can have leading zeros!"
@@ -114,15 +156,16 @@ class rational:
 def float_to_rational(f: float):
     if f == 0.0:
         return (0, 1)
-    m, e = frexp(f)  # f = m * 2**e, m in [0.5, 1)
-    # Bruch aus Mantisse und Exponent
+    m, e = frexp(f)
+
     numerator = int(m * 2**53)
     denominator = 2**53
     if e > 0:
         numerator <<= e
     else:
         denominator <<= -e
-    # Kürzen
-    from math import gcd
+
     g = gcd(numerator, denominator)
     return (numerator // g, denominator // g)
+
+rationalComprehendable = int | float | rational

@@ -27,7 +27,7 @@ class algebraic:
             k, r, denom = self.simplify_sqrt_div(disc, 2*a)
             if sign < 0:
                 k = -k
-            return f"{str(k) + "*" if k != 1 else ""}{"sqrt(" + r + ")" if r != 1 else "1"}{"/" + str(denom) if denom != 1 else ""}"
+            return f"{str(k) + "*" if k != 1 else ""}{"sqrt(" + str(r) + ")" if r != 1 else "1"}{"/" + str(denom) if denom != 1 else ""}"
         return f"<'{self.root_index + 1}.' solution of the polynome '0 = {' + '.join(f'{c}x^{i}' for i, c in enumerate(self.coefficients))}'>"
 
     @staticmethod
@@ -46,6 +46,24 @@ class algebraic:
     @property
     def degree(self) -> int:
         return len(self.coefficients) - 1
+    
+    @property
+    def rational(self) -> bool:
+        coeffs = self.coefficients
+        a_n = coeffs[-1]
+        a_0 = coeffs[0]
+
+        # mögliche p/q-Kandidaten
+        ps = [i for i in range(-abs(a_0), abs(a_0)+1) if i != 0 and a_0 % i == 0]
+        qs = [i for i in range(1, abs(a_n)+1) if a_n % i == 0]
+
+        for p in ps:
+            for q in qs:
+                r = rational(p, q)
+                val = sum(c * (r**i) for i, c in enumerate(coeffs))
+                if val == 0:
+                    return True, r
+        return False, None
 
 @dataclass
 class root(algebraic):
