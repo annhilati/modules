@@ -1,5 +1,7 @@
 from typing import TypeVar, Callable, Any
 
+from ametrine.library.numeric import Numeric
+
 sourceType = TypeVar("sourceType")
 convertedType = TypeVar("convertedType")
 T = TypeVar("T")
@@ -31,8 +33,8 @@ def simplify(obj: T) -> T | Any:
             else:
                 break
 
-        elif hasattr(obj, "simplify"):
-            new_obj = obj.simplify()
+        elif isinstance(obj, Numeric):
+            new_obj = obj.reduce()
             if new_obj == obj:
                 break
             obj = new_obj

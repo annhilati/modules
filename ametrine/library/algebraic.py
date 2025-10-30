@@ -81,14 +81,14 @@ class algebraicReal:
 
     @property
     def determinant(self) -> rational:
-
+        ...
 
 @dataclass
 class root(algebraicReal):
     radicand:       rational
-    exponent:       rational
-    coefficients:   list[int]   = field(init=False)
-    root_index:     int         = field(init=False, default=0)
+    index:          rational
+    coefficients:   PolynomialCoefficients  = field(init=False)
+    root_index:     int                     = field(init=False, default=0)
 
     # @property
     # def coefficients(self) -> list[int]:
@@ -99,7 +99,7 @@ class root(algebraicReal):
     #     return algebraic_from_root(self.radicand, self.exponent)(1)
 
     def __post_init__(self):
-        coefficients =  algebraic_from_root(self.radicand, self.exponent)[0]
+        coefficients =  algebraic_from_root(self.radicand, self.index)[0]
         self.coefficients = coefficients
         for i, solution in enumerate(find_real_algebraic_roots(coefficients)):
             if self.radicand == solution:
@@ -116,20 +116,20 @@ class root(algebraicReal):
         if isinstance(obj, rationalComprehendable):
             return cls(rational.comprehend(obj), 1)
         elif isinstance(obj, root):
-            return cls(obj.radicand, obj.exponent)
+            return cls(obj.radicand, obj.index)
 
     def __mul__(self, other) -> root:
-        if isinstance(other, root) and other.exponent == self.exponent:
+        if isinstance(other, root) and other.index == self.index:
             return root(
                 radicand=self.radicand * other.radicand,
-                exponent=self.exponent
+                index=self.index
             )
         return super().__mul__()
     
     def __eq__(self, other):
         other = root.comprehend(other)
         return (
-            self.radicand == other.radicand and self.exponent == other.exponent
+            self.radicand == other.radicand and self.index == other.index
             or
             self.simplify() == other.simplify()
         )

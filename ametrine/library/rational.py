@@ -1,9 +1,11 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import ClassVar, Callable
 
 from math import gcd, frexp
 
 from ametrine.ausgelagert import simplify
+from ametrine.typing import Digit
 
 
 @dataclass
@@ -18,7 +20,8 @@ class rational:
         if self.denominator == 0:
             raise ValueError("Denominator can't be zero")
         elif self.denominator < 0:
-            raise ValueError("Denominator can't be below zero")
+            self.numerator = - self.numerator
+            self.denominator = - self.denominator
         
         g = gcd(self.numerator, self.denominator)
         self.numerator = self.numerator // g
@@ -26,7 +29,9 @@ class rational:
 
     @classmethod
     def comprehend(cls, obj: rationalComprehendable) -> rational:
-        "Don't use floats that are meant to be periodically"
+        """
+        Don't use floats that are meant to be periodically or are longer than 16 decimals
+        <br>floats lose accuracy after 16 decimals"""
         if isinstance(obj, int):
             return cls(obj, 1)
         elif isinstance(obj, float):
@@ -34,11 +39,18 @@ class rational:
             return cls(n, d)
         elif isinstance(obj, rational):
             return cls(obj.numerator, obj.denominator)
+        else:
+            raise TypeError(f"Cannot convert type to 'rational': '{type(obj).__name__}'")
 
     def __repr__(self) -> str:
         if self.denominator == 1:
             return str(self.numerator)
         return f"{self.numerator}/{self.denominator}"
+    
+    def reduce(self) -> int | None:
+        if self.denominator == 1:
+            return self.numerator
+        return None
     
     def __add__(self, other):
         other = simplify(other)
@@ -49,7 +61,7 @@ class rational:
                 denominator=self.denominator * other.denominator
             )
         else:
-            raise NotImplementedError
+            raise NotImplementedError(f"unsupported operand type(s) for +: {type(self).__name__} and {type(other).__name__}")
                 
     def __radd__(self, other):
         return self.__add__(other)
@@ -63,7 +75,7 @@ class rational:
                 denominator=self.denominator * other.denominator
             )
         else:
-            raise NotImplementedError
+            raise TypeError(f"unsupported operand type(s) for -: {type(self).__name__} and {type(other).__name__}")
         
     def __rsub__(self, other):
         other = simplify(other)
@@ -74,7 +86,7 @@ class rational:
                 denominator=self.denominator * other.denominator
             )
         else:
-            raise NotImplementedError
+            raise TypeError(f"unsupported operand type(s) for -: {type(other).__name__} and {type(self).__name__}")
         
     def __mul__(self, other):
         other = simplify(other)
@@ -85,7 +97,7 @@ class rational:
                 denominator=self.denominator * other.denominator
             )
         else:
-            raise NotImplementedError
+            raise TypeError(f"unsupported operand type(s) for *: {type(self).__name__} and {type(other).__name__}")
         
     def __rmul__(self, other):
         return self.__mul__(other)
@@ -99,7 +111,7 @@ class rational:
                 denominator=self.denominator * other.numerator
             )
         else:
-            raise NotImplementedError
+            raise TypeError(f"unsupported operand type(s) for /: {type(self).__name__} and {type(other).__name__}")
         
     def __rtruediv__(self, other):
         other = simplify(other)
@@ -110,38 +122,37 @@ class rational:
                 denominator=other.denominator * self.numerator
             )
         else:
-            raise NotImplementedError
+            raise TypeError(f"unsupported operand type(s) for /: {type(other).__name__} and {type(self).__name__}")
         
-    def __pow__(self, exponent):
-        exponent = simplify(exponent)
-        # if isinstance(exponent, float):
-        #     exponent = rational.comprehend(exponent)
-        if isinstance(exponent, int):
-            return rational(
-                numerator=self.numerator ** exponent,
-                denominator=self.denominator ** exponent
-            )
-        elif isinstance(exponent, rational):
+    def __pow__(self, other):
+        other = simplify(other)
+        if isinstance(other, rationalComprehendable):
+            other = rational.comprehend(rational)
             from ametrine.library.algebraic import root
             return simplify(root(
-                radicand=self ** exponent.numerator,
-                exponent=exponent.denominator
+                radicand=rational(
+                    numerator=self.numerator ** other.numerator,
+                    denominator=self.denominator ** other.denominator
+                ),
+                index=other.denominator
             ))
         else:
-            raise NotImplementedError
+            raise TypeError(f"unsupported operand type(s) for **: {type(self).__name__} and {type(other).__name__}")
         
-    def __rpow__(self, base):
-        base = simplify(base)
-        # if isinstance(exponent, float):
-        #     exponent = rational.comprehend(exponent)
-        if isinstance(base, int) or isinstance(base, rational):
+    def __rpow__(self, other):
+        other = simplify(other)
+        if isinstance(other, rationalComprehendable):
+            other = rational.comprehend(rational)
             from ametrine.library.algebraic import root
-            return root(
-                radicand=base ** self.numerator,
-                exponent=self.denominator
-            )
+            return simplify(root(
+                radicand=rational(
+                    numerator=other.numerator ** self.numerator,
+                    denominator=other.denominator ** self.denominator
+                ),
+                index=self.denominator
+            ))
         else:
-            raise NotImplementedError
+            raise TypeError(f"unsupported operand type(s) for /: {type(other).__name__} and {type(self).__name__}")
 
     def __neg__(self):
         return rational(
@@ -149,15 +160,11 @@ class rational:
             denominator=self.denominator
         )
         
-    def __eq__(self, value):
-        value = simplify(value)
-        if isinstance(value, rational):
-            return self.numerator == value.numerator and self.denominator == value.denominator
-        elif isinstance(value, rationalComprehendable):
-            value = rational.comprehend(value)
-            return self.numerator == value.numerator and self.denominator == value.denominator
-        else:
-            raise NotImplementedError(type(value))
+    def __eq__(self, other):
+        other = simplify(other)
+        if isinstance(other, rationalComprehendable):
+            other = rational.comprehend(rational)
+            return self.numerator == other.numerator and self.denominator == other.denominator
         
     def __lt__(self, other):
         other = rational.comprehend(other)
@@ -176,31 +183,22 @@ class rational:
         return self.numerator * other.denominator >= other.numerator * self.denominator
         
     @property
-    def negative(self) -> bool:
+    def is_negative(self) -> bool:
         return self.numerator < 0
     
     @property
-    def periodic(self) -> bool:
-        d = self.denominator // gcd(self.numerator, self.denominator)
-        for p in (2, 5):
-            while d % p == 0:
-                d //= p
-        return d != 1
+    def is_periodic(self) -> bool:
+        return len(self.to_decimal_parts()[-1]) != 0
     
-    def simplify(self) -> rational | int:
-        if self.denominator == 1:
-            return self.numerator
-        return self
-    
-    def to_decimal_parts(self) -> tuple[int, int, int]:
+    def to_decimal_parts(self) -> tuple[int, list[Digit], list[Digit]]:
         "Can have leading zeros!"
         integer_part = self.numerator // self.denominator
         remainder = abs(self.numerator % self.denominator)
 
         if remainder == 0:
-            return integer_part, None, None
+            return integer_part, [], []
 
-        seen = {}  # remainder -> position
+        seen = {}
         digits = []
         repeating_start = None
 
@@ -215,7 +213,6 @@ class rational:
             remainder %= self.denominator
 
         if repeating_start is None:
-            # kein periodischer Teil
             non_repeating = digits
             repeating = []
         else:

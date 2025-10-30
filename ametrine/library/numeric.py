@@ -1,11 +1,11 @@
 class Numeric:
 
+    def reduce(self):
+        raise NotImplementedError
+
     def __init__(self):
         raise NotImplementedError
 
-    def is_negative(self) -> bool:
-        raise NotImplementedError
-    
     def __add__(self, other):
         raise NotImplementedError
     def __sub__(self, other):
@@ -29,3 +29,8 @@ class Numeric:
         raise NotImplementedError
     def negate(self):
         raise NotImplementedError
+    
+    @property
+    def is_negative(self) -> bool:
+        raise NotImplementedError
+    
