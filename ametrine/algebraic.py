@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from ametrine.rational import rational
+from ametrine.rational import rational, rationalComprehendable
 
 from math import gcd, isqrt
 
 @dataclass
-class algebraic:
+class algebraicReal:
     coefficients:   list[int]
     root_index:     int         = 0
 
@@ -18,24 +18,9 @@ class algebraic:
             raise ValueError
 
     def __repr__(self) -> str:
-        if self.degree == 1:
-            a0, a1 = self.coefficients
-            if a1 != 0:
-                return str(rational(-a0, a1))
-        elif self.degree == 2:
-            a, b, c = self.coefficients[2], self.coefficients[1], self.coefficients[0]
-            disc = b**2 - 4*a*c
-            sign = 1 if self.root_index == 0 else -1
-
-            # Bruch + Wurzel vereinfachen
-            k, r, denom = self.simplify_sqrt_div(disc, 2*a)
-            if sign < 0:
-                k = -k
-
-            # if r == 1: # Bitte noch implementieren
-            #     return f"{str(k) + "*" if k != 1 else ""}{"sqrt(" + str(r) + ")" if r != 1 else "1"}{"/" + str(denom) if denom != 1 else ""}"
-            return f"{str(k) + "*" if k != 1 else ""}{"sqrt(" + str(r) + ")" if r != 1 else "1"}{"/" + str(denom) if denom != 1 else ""}"
-        return f"<'{self.root_index + 1}.' solution of the polynome '0 = {' + '.join(f'{c}x^{i}' for i, c in enumerate(self.coefficients))}'>"
+        if type(self.simplify()) in [int, rational]:
+            return str(self.simplify())
+        return f"<{self.root_index + 1}. solution of the polynomial '0 = {' + '.join(f'{c}x^{i}' for i, c in enumerate(self.coefficients))}'>"
 
     @staticmethod
     def simplify_sqrt_div(n, denom):
@@ -49,12 +34,8 @@ class algebraic:
         k //= g
         denom //= g
         return k, n, denom
-      
-    @property
-    def degree(self) -> int:
-        return len(self.coefficients) - 1
     
-    def simplify(self):
+    def simplify(self) -> algebraicReal | rational | int:
         """Gibt eine rationale Darstellung zurück, falls das Algebraic rational ist.
         Andernfalls wird self zurückgegeben.
         # TODO: Gibt teilweise negative Werte zurück, ergibt garkeinen Sinn. Teste: print(rational(5) ** rational(1, 2))
@@ -78,48 +59,60 @@ class algebraic:
         for p in ps:
             for q in qs:
                 r = rational(p, q)
-                print(r)
                 val = sum(c * (r ** i) for i, c in enumerate(coeffs))
-                print(val)
                 if val == 0:
-                    # passende rationale Wurzel gefunden
-                    # root_index wählt die Lösung (0 = erste, 1 = zweite, ...)
+                    found = rational(p, q)
                     if root_index == 0:
-                        return rational(r.numerator, r.denominator)
+                        return found.simplify()
+                    else:
+                        return rational(-found.numerator, found.denominator).simplify()
+
 
         return self  # keine rationale Lösung gefunden
-
     
     @property
-    def rational(self) -> bool:
-        coeffs = self.coefficients
-        a_n = coeffs[-1]
-        a_0 = coeffs[0]
+    def polynomial_degree(self) -> int:
+        return len(self.coefficients) - 1
 
-        # mögliche p/q-Kandidaten
-        ps = [i for i in range(-abs(a_0), abs(a_0)+1) if i != 0 and a_0 % i == 0]
-        qs = [i for i in range(1, abs(a_n)+1) if a_n % i == 0]
+    @property
+    def is_rational(self) -> bool:
+        return isinstance(self.simplify(), rational)
 
-        for p in ps:
-            for q in qs:
-                r = rational(p, q)
-                val = sum(c * (r**i) for i, c in enumerate(coeffs))
-                if val == 0:
-                    return True, r
-        return False, None
 
 @dataclass
-class root(algebraic):
+class root(algebraicReal):
     radicand:       rational
     exponent:       rational
     coefficients:   list[int]   = field(init=False)
     root_index:     int         = field(init=False, default=0)
 
+    # @property
+    # def coefficients(self) -> list[int]:
+    #     return algebraic_from_root(self.radicand, self.exponent)[0]
+    
+    # @property
+    # def root_index(self) -> int:
+    #     return algebraic_from_root(self.radicand, self.exponent)(1)
+
     def __post_init__(self):
-        self.coefficients, self.root_index = algebraic_from_root(self.radicand, self.exponent)
+        coefficients =  algebraic_from_root(self.radicand, self.exponent)[0]
+        self.coefficients = coefficients
+        for i, solution in enumerate(find_real_algebraic_roots(coefficients)):
+            if self.radicand == solution:
+                self.root_index = i
+
+        if self.radicand < 0:
+            raise ValueError
 
     def __repr__(self) -> str:
         return super().__repr__()
+    
+    @classmethod
+    def comprehend(cls, obj: rootComprehendable) -> root:
+        if isinstance(obj, rationalComprehendable):
+            return cls(rational.comprehend(obj), 1)
+        elif isinstance(obj, root):
+            return cls(obj.radicand, obj.exponent)
 
     def __mul__(self, other) -> root:
         if isinstance(other, root) and other.exponent == self.exponent:
@@ -128,36 +121,101 @@ class root(algebraic):
                 exponent=self.exponent
             )
         return super().__mul__()
-        
-def algebraic_from_root(r: rational | algebraic | int, e: int | rational):
-
-    if isinstance(e, rational):
-        # e = p/q
-        p, q = e.numerator, e.denominator
-        return algebraic_from_root(algebraic_from_root(r, p), rational(1, q))
-
-    if not isinstance(e, int):
-        raise TypeError("Exponent muss int oder Rational sein")
     
+    def __eq__(self, other):
+        other = root.comprehend(other)
+        return (
+            self.radicand == other.radicand and self.exponent == other.exponent
+            or
+            self.simplify() == other.simplify()
+        )
+
+rootComprehendable = int | float | rational | root
+        
+def algebraic_from_root(radicand: rationalComprehendable, index: rationalComprehendable):
+    """
+    Bestimmt das Minimalpolynom und den Lösungsindex einer algebraischen Zahl x = radicand^(1/index).
+    Annahme: kein Fehlerfall, alle Werte endlich, index > 0.
+    Gibt (coefficients, root_index) zurück.
+    """
+
+    radicand = rational.comprehend(radicand)
+    radicand = radicand.simplify()
+    if isinstance(radicand, rational) and radicand.denominator == 1:
+        radicand = radicand.numerator
+
+    index = rational.comprehend(index)
+    index = index.simplify()
+
+    if isinstance(index, int):
+        e = index
+        coeffs = [-radicand] + [0]*(e-1) + [1]
+        root_index = 0
+        return coeffs, root_index
+
+    p, q = index.numerator, index.denominator
+    coeffs = [-radicand] + [0]*(p*q - 1) + [1]
     root_index = 0
-
-    if isinstance(r, int):
-        r = rational(r, 1)
-
-    # r ist Rational
-    if isinstance(r, rational):
-        n, d = r.numerator, r.denominator
-        coeffs = [-n]
-        coeffs += [0]*(e-1)
-        coeffs.append(d)
-        # Polynom: d*x^e - n = 0
-
-    # r ist Algebraic
-    if isinstance(r, algebraic):
-        # ersetze x durch x^e im Polynom von r
-        coeffs = []
-        for i, c in enumerate(r.coefficients):
-            coeffs += [0]*(e*i - len(coeffs)) + [c]
-            root_index = r.root_index
-
     return coeffs, root_index
+
+
+from typing import List, Union
+
+def rational_root_candidates(coeffs: List[int]) -> List['rational']:
+    """
+    Liefert alle rationalen Kandidaten p/q für p|a0, q|an.
+    coeffs: [a0, a1, ..., an] Koeffizienten des Polynoms
+    """
+    from math import gcd
+
+    a0 = coeffs[0]
+    an = coeffs[-1]
+
+    def divisors(n):
+        n = abs(n)
+        return [i for i in range(1, n+1) if n % i == 0]
+
+    ps = divisors(a0)
+    qs = divisors(an)
+
+    candidates = []
+    for p in ps:
+        for q in qs:
+            candidates.append(rational(p, q))
+            candidates.append(rational(-p, q))
+    # Eindeutige Kandidaten
+    seen = set()
+    unique_candidates = []
+    for c in candidates:
+        key = (c.numerator, c.denominator)
+        if key not in seen:
+            seen.add(key)
+            unique_candidates.append(c)
+    return unique_candidates
+
+
+def find_real_algebraic_roots(coeffs: List[int]) -> List[Union['rational','algebraicReal']]:
+    """
+    Findet alle rationalen Lösungen eines Polynoms mit rationalen Koeffizienten.
+    coeffs: [a0, a1, ..., an], a0*x^0 + ... + an*x^n = 0
+    Gibt sortierte Liste zurück. Wenn keine rationale Lösung existiert, 
+    kann eine symbolische Algebraic-Repräsentation zurückgegeben werden.
+    """
+    # Kandidaten prüfen
+    candidates = rational_root_candidates(coeffs)
+    solutions: list[int | rational] = []
+
+    for r in candidates:
+        val = sum(c * (r ** i) for i, c in enumerate(coeffs))
+        if val == 0:
+            solutions.append(r.simplify())
+
+    # Sortieren nach Wert
+    solutions.sort(key=lambda x: x)
+    
+    if solutions:
+        return solutions
+    else:
+        # Keine rationale Lösung gefunden, Minimalpolynom symbolisch zurückgeben
+        # z.B. als Algebraic-Objekt mit root_index 0
+        return [algebraicReal(coefficients=coeffs, root_index=0)]

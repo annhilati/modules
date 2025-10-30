@@ -142,6 +142,12 @@ class rational:
             )
         else:
             raise NotImplementedError
+
+    def __neg__(self):
+        return rational(
+            numerator=-self.numerator,
+            denominator=self.denominator
+        )
         
     def __eq__(self, value):
         value = simplify(value)
@@ -152,6 +158,22 @@ class rational:
             return self.numerator == value.numerator and self.denominator == value.denominator
         else:
             raise NotImplementedError(type(value))
+        
+    def __lt__(self, other):
+        other = rational.comprehend(other)
+        return self.numerator * other.denominator < other.numerator * self.denominator
+
+    def __le__(self, other):
+        other = rational.comprehend(other)
+        return self.numerator * other.denominator <= other.numerator * self.denominator
+
+    def __gt__(self, other):
+        other = rational.comprehend(other)
+        return self.numerator * other.denominator > other.numerator * self.denominator
+
+    def __ge__(self, other):
+        other = rational.comprehend(other)
+        return self.numerator * other.denominator >= other.numerator * self.denominator
         
     @property
     def negative(self) -> bool:

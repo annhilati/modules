@@ -1,4 +1,4 @@
 from ametrine.rational import rational
-from ametrine.algebraic import algebraic, root
+from ametrine.algebraic import algebraicReal, root
 
-__all__ = ["rational", "root", "algebraic"]
+__all__ = ["rational", "root", "algebraicReal"]
