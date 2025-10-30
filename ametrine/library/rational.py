@@ -122,7 +122,7 @@ class rational:
                 denominator=self.denominator ** exponent
             )
         elif isinstance(exponent, rational):
-            from ametrine.algebraic import root
+            from ametrine.library.algebraic import root
             return simplify(root(
                 radicand=self ** exponent.numerator,
                 exponent=exponent.denominator
@@ -135,7 +135,7 @@ class rational:
         # if isinstance(exponent, float):
         #     exponent = rational.comprehend(exponent)
         if isinstance(base, int) or isinstance(base, rational):
-            from ametrine.algebraic import root
+            from ametrine.library.algebraic import root
             return root(
                 radicand=base ** self.numerator,
                 exponent=self.denominator

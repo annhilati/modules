@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from ametrine.rational import rational, rationalComprehendable
+from ametrine.library.rational import rational, rationalComprehendable
+from ametrine.typing import PolynomialCoefficients
 
 from math import gcd, isqrt
 
 @dataclass
 class algebraicReal:
-    coefficients:   list[int]
+    coefficients:   PolynomialCoefficients
     root_index:     int         = 0
 
     def __post_init__(self):
@@ -77,6 +78,9 @@ class algebraicReal:
     @property
     def is_rational(self) -> bool:
         return isinstance(self.simplify(), rational)
+
+    @property
+    def determinant(self) -> rational:
 
 
 @dataclass
@@ -161,7 +165,7 @@ def algebraic_from_root(radicand: rationalComprehendable, index: rationalCompreh
 
 from typing import List, Union
 
-def rational_root_candidates(coeffs: List[int]) -> List['rational']:
+def rational_root_candidates(coeffs: PolynomialCoefficients) -> List['rational']:
     """
     Liefert alle rationalen Kandidaten p/q für p|a0, q|an.
     coeffs: [a0, a1, ..., an] Koeffizienten des Polynoms
@@ -194,7 +198,7 @@ def rational_root_candidates(coeffs: List[int]) -> List['rational']:
     return unique_candidates
 
 
-def find_real_algebraic_roots(coeffs: List[int]) -> List[Union['rational','algebraicReal']]:
+def find_real_algebraic_roots(coeffs: PolynomialCoefficients) -> List[Union['rational','algebraicReal']]:
     """
     Findet alle rationalen Lösungen eines Polynoms mit rationalen Koeffizienten.
     coeffs: [a0, a1, ..., an], a0*x^0 + ... + an*x^n = 0
