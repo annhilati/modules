@@ -60,6 +60,22 @@ class rational(Numeric):
         if self.denominator == 1:
             return self.numerator
         return None
+
+    def round(self, to_decimals: int) -> rational:
+        whole, non_repeating, repeating = self.to_decimal_parts()
+        decimals = "".join([str(d) for d in non_repeating]) + "".join([str(d) for d in repeating]) * (to_decimals + 1)
+        if to_decimals >= len(decimals):
+            return rational(self.numerator, self.denominator)
+
+        nDecimals = decimals[:to_decimals]  # die ersten to_decimals Zeichen
+        # Prüfen, ob gerundet werden muss
+        if int(decimals[to_decimals]) >= 5:
+            # Umwandeln in Liste, letzte Stelle erhöhen
+            nDecimals_list = list(nDecimals)
+            nDecimals_list[-1] = str(int(nDecimals_list[-1]) + 1)
+            nDecimals = "".join(nDecimals_list)
+
+        return rational.comprehend(str(whole) + "." + nDecimals)
     
     def __add__(self, other):
         other = simplify(other)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 class Numeric:
 
-    def reduce(self) -> Numeric | None:
+    def reduce(self) -> Numeric | int | None:
         raise NotImplementedError
 
     def __init__(self):

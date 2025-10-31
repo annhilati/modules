@@ -51,3 +51,8 @@ def compute_pi(n_digits):
     four = rational(4)
     pi_rat = four * ( four * A1 - A2 )
     return pi_rat
+
+def leibniz_formula(i: int) -> rational:
+    x = 0
+    for k in range(0, i):
+        x += rational(((-1) ** k), (2 * k + 1))
