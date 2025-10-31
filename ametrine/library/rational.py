@@ -3,12 +3,13 @@ from dataclasses import dataclass
 
 from math import gcd, frexp
 
+from ametrine.library.numeric import Numeric
 from ametrine.ausgelagert import simplify
 from ametrine.typing import Digit
 
 
 @dataclass
-class rational:
+class rational(Numeric):
     numerator:      int
     denominator:    int = 1
 
@@ -30,7 +31,8 @@ class rational:
     def comprehend(cls, obj: rationalComprehendable) -> rational:
         """
         Don't use floats that are meant to be periodically or are longer than 16 decimals
-        <br>floats lose accuracy after 16 decimals"""
+        <br>floats lose accuracy after 16 decimals
+        """
         if isinstance(obj, int):
             return cls(obj, 1)
         elif isinstance(obj, float):
@@ -38,7 +40,15 @@ class rational:
             return cls(n, d)
         elif isinstance(obj, rational):
             return cls(obj.numerator, obj.denominator)
+        elif isinstance(obj, str):
+            if "." in obj:
+                objWhole, objFrac = obj.split(".", 1)
+                frac = rational(int(objFrac), 10 ** len(objFrac))
+                whole = rational(int(objWhole))
+                return frac + whole
+            return rational(int(obj))
         else:
+            raise TypeError(obj)
             raise TypeError(f"Cannot convert type to 'rational': '{type(obj).__name__}'")
 
     def __repr__(self) -> str:
@@ -162,7 +172,7 @@ class rational:
     def __eq__(self, other):
         other = simplify(other)
         if isinstance(other, rationalComprehendable):
-            other = rational.comprehend(rational)
+            other = rational.comprehend(other)
             return self.numerator == other.numerator and self.denominator == other.denominator
         
     def __lt__(self, other):
@@ -243,4 +253,4 @@ def float_to_rational(f: float):
     g = gcd(numerator, denominator)
     return (numerator // g, denominator // g)
 
-rationalComprehendable = int | float | rational
+rationalComprehendable = int | float | rational | str

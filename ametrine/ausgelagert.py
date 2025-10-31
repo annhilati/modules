@@ -4,7 +4,6 @@ from ametrine.library.numeric import Numeric
 
 sourceType = TypeVar("sourceType")
 convertedType = TypeVar("convertedType")
-T = TypeVar("T")
 
 simplifyer: dict[sourceType, tuple[Callable[[sourceType], bool], Callable[[sourceType], convertedType]]] = {
     float: (
@@ -17,32 +16,26 @@ simplifyer: dict[sourceType, tuple[Callable[[sourceType], bool], Callable[[sourc
     )
 }
 
-def simplify(obj: T) -> T | Any:
+def simplify(obj: Numeric | float | int | Any) -> Numeric | int | Any:
     """Vereinfacht ein Objekt so weit wie möglich."""
-    while True:
-        t = type(obj)
+    input = obj
 
-        if t in simplifyer:
-            check, convert = simplifyer[t]
-            if check(obj):
-                new_obj = convert(obj)
-                if type(new_obj) is t and new_obj == obj:
-                    break
-                obj = new_obj
-                continue  # nochmal prüfen
-            else:
-                break
+    current = obj
+    last = None
+    while type(current) != type(last):
+        last = current
 
-        elif isinstance(obj, Numeric):
-            new_obj = obj.reduce()
-            if new_obj == obj:
-                break
-            obj = new_obj
-            continue
+        if isinstance(current, Numeric):
+            if current.reduce() is not None:
+                current = current.reduce()
+
+        elif type(current) in simplifyer:
+            if simplifyer[type(current)][0](current):
+                current = simplifyer[type(current)][1](current)
 
         else:
-            raise TypeError(
-                f"Unknown numeric type: '{type(obj).__name__}'"
-            )
+            current = current
 
-    return obj
+
+
+    return current
