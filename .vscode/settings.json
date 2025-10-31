@@ -14,7 +14,8 @@
         "blackholepy/physics/__pycache__",
         "blackholepy/__pycache__",
         ".vscode",
-        "ametrine/__pycache__"
+        "ametrine/__pycache__",
+        "ametrine/library/__pycache__"
     ],
     "python-envs.defaultEnvManager": "ms-python.python:system",
     "python-envs.pythonProjects": []

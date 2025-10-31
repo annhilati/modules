@@ -7,9 +7,9 @@ from ametrine.typing import PolynomialCoefficients
 from math import gcd, isqrt
 
 @dataclass
-class algebraicReal:
+class algebraic:
     coefficients:   PolynomialCoefficients
-    root_index:     int         = 0
+    root_number:    int         = 0
 
     def __post_init__(self):
         if any([not isinstance(coefficient, int) for coefficient in self.coefficients]):
@@ -21,7 +21,7 @@ class algebraicReal:
     def __repr__(self) -> str:
         if type(self.simplify()) in [int, rational]:
             return str(self.simplify())
-        return f"<{self.root_index + 1}. solution of the polynomial '0 = {' + '.join(f'{c}x^{i}' for i, c in enumerate(self.coefficients))}'>"
+        return f"<{self.root_number + 1}. solution of the polynomial '0 = {' + '.join(f'{c}x^{i}' for i, c in enumerate(self.coefficients))}'>"
 
     @staticmethod
     def simplify_sqrt_div(n, denom):
@@ -36,13 +36,13 @@ class algebraicReal:
         denom //= g
         return k, n, denom
     
-    def simplify(self) -> algebraicReal | rational | int:
+    def simplify(self) -> algebraic | rational | int:
         """Gibt eine rationale Darstellung zurück, falls das Algebraic rational ist.
         Andernfalls wird self zurückgegeben.
         # TODO: Gibt teilweise negative Werte zurück, ergibt garkeinen Sinn. Teste: print(rational(5) ** rational(1, 2))
         """
         coeffs = self.coefficients
-        root_index = self.root_index
+        root_index = self.root_number
 
         # Nur sinnvoll, wenn Wurzelindex 0 (erste Lösung)
         # und alle Koeffizienten ganze Zahlen oder Rationale sind
@@ -84,11 +84,11 @@ class algebraicReal:
         ...
 
 @dataclass
-class root(algebraicReal):
+class root(algebraic):
     radicand:       rational
     index:          rational
     coefficients:   PolynomialCoefficients  = field(init=False)
-    root_index:     int                     = field(init=False, default=0)
+    root_number:    int                     = field(init=False, default=0)
 
     # @property
     # def coefficients(self) -> list[int]:
@@ -103,7 +103,7 @@ class root(algebraicReal):
         self.coefficients = coefficients
         for i, solution in enumerate(find_real_algebraic_roots(coefficients)):
             if self.radicand == solution:
-                self.root_index = i
+                self.root_number = i
 
         if self.radicand < 0:
             raise ValueError
@@ -198,7 +198,7 @@ def rational_root_candidates(coeffs: PolynomialCoefficients) -> List['rational']
     return unique_candidates
 
 
-def find_real_algebraic_roots(coeffs: PolynomialCoefficients) -> List[Union['rational','algebraicReal']]:
+def find_real_algebraic_roots(coeffs: PolynomialCoefficients) -> List[Union['rational','algebraic']]:
     """
     Findet alle rationalen Lösungen eines Polynoms mit rationalen Koeffizienten.
     coeffs: [a0, a1, ..., an], a0*x^0 + ... + an*x^n = 0
@@ -222,4 +222,4 @@ def find_real_algebraic_roots(coeffs: PolynomialCoefficients) -> List[Union['rat
     else:
         # Keine rationale Lösung gefunden, Minimalpolynom symbolisch zurückgeben
         # z.B. als Algebraic-Objekt mit root_index 0
-        return [algebraicReal(coefficients=coeffs, root_index=0)]
+        return [algebraic(coefficients=coeffs, root_number=0)]
