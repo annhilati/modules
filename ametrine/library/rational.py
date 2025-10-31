@@ -48,7 +48,6 @@ class rational(Numeric):
                 return frac + whole
             return rational(int(obj))
         else:
-            raise TypeError(obj)
             raise TypeError(f"Cannot convert type to 'rational': '{type(obj).__name__}'")
 
     def __repr__(self) -> str:
@@ -152,22 +151,19 @@ class rational(Numeric):
     def __pow__(self, other):
         other = simplify(other)
         if isinstance(other, rationalComprehendable):
-            other = rational.comprehend(rational)
-            from ametrine.library.algebraic import root
-            return simplify(root(
-                radicand=rational(
-                    numerator=self.numerator ** other.numerator,
-                    denominator=self.denominator ** other.denominator
-                ),
-                index=other.denominator
-            ))
+            other = rational.comprehend(other)
+            if type(other.reduce()) is int:
+                return rational(
+                    numerator=self.numerator ** 5,
+                    denominator=self.denominator ** 5
+                )
         else:
             raise TypeError(f"unsupported operand type(s) for **: {type(self).__name__} and {type(other).__name__}")
         
     def __rpow__(self, other):
         other = simplify(other)
         if isinstance(other, rationalComprehendable):
-            other = rational.comprehend(rational)
+            other = rational.comprehend(other)
             from ametrine.library.algebraic import root
             return simplify(root(
                 radicand=rational(

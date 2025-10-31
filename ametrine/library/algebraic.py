@@ -144,12 +144,12 @@ def algebraic_from_root(radicand: rationalComprehendable, index: rationalCompreh
     """
 
     radicand = rational.comprehend(radicand)
-    radicand = radicand.simplify()
+    radicand = radicand.reduce()
     if isinstance(radicand, rational) and radicand.denominator == 1:
         radicand = radicand.numerator
 
     index = rational.comprehend(index)
-    index = index.simplify()
+    index = index.reduce()
 
     if isinstance(index, int):
         e = index

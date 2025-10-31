@@ -56,3 +56,8 @@ def leibniz_formula(i: int) -> rational:
     x = 0
     for k in range(0, i):
         x += rational(((-1) ** k), (2 * k + 1))
+    return 4 * x
+
+def machins_formula(i: int) -> rational:
+    from ametrine.calc.trig import gregorys_series
+    return 4 * (4 * gregorys_series(rational(1, 5), i) - gregorys_series(rational(1, 239), i))
