@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-class Numeric:
+class ExactNumber:
 
-    def reduce(self) -> Numeric | int | None:
+    def reduce(self) -> ExactNumber | int | None:
         raise NotImplementedError
 
     def __init__(self):

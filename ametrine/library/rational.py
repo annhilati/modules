@@ -3,13 +3,21 @@ from dataclasses import dataclass
 
 from math import gcd, frexp
 
-from ametrine.library.numeric import Numeric
+from ametrine.library.numeric import ExactNumber
 from ametrine.ausgelagert import simplify
 from ametrine.typing import Digit
 
 
 @dataclass
-class rational(Numeric):
+class rational(ExactNumber):
+    """Type, storing a rational number, meaning that it is arithmetically displayable by an division of two integers.
+    
+    Supported Magic
+    --------
+    - `+`, `-`, `*`, `/` for all `rational` numbers
+    - `**` as long as the exponent is an integer
+    - `==`, `<`, `>`, `<=`, `>=`, 
+    """
     numerator:      int
     denominator:    int = 1
 
@@ -59,6 +67,12 @@ class rational(Numeric):
         if self.denominator == 1:
             return self.numerator
         return None
+    
+    def reciproke(self) -> rational:
+        return rational(
+            numerator=self.denominator,
+            denominator=self.numerator
+        )
 
     def round(self, to_decimals: int) -> rational:
         whole, non_repeating, repeating = self.to_decimal_parts()
@@ -66,10 +80,10 @@ class rational(Numeric):
         if to_decimals >= len(decimals):
             return rational(self.numerator, self.denominator)
 
-        nDecimals = decimals[:to_decimals]  # die ersten to_decimals Zeichen
-        # Prüfen, ob gerundet werden muss
+        nDecimals = decimals[:to_decimals]
+
         if int(decimals[to_decimals]) >= 5:
-            # Umwandeln in Liste, letzte Stelle erhöhen
+
             nDecimals_list = list(nDecimals)
             nDecimals_list[-1] = str(int(nDecimals_list[-1]) + 1)
             nDecimals = "".join(nDecimals_list)
@@ -148,32 +162,33 @@ class rational(Numeric):
         else:
             raise TypeError(f"unsupported operand type(s) for /: {type(other).__name__} and {type(self).__name__}")
         
-    def __pow__(self, other):
-        other = simplify(other)
-        if isinstance(other, rationalComprehendable):
-            other = rational.comprehend(other)
-            if type(other.reduce()) is int:
-                return rational(
-                    numerator=self.numerator ** 5,
-                    denominator=self.denominator ** 5
-                )
-        else:
-            raise TypeError(f"unsupported operand type(s) for **: {type(self).__name__} and {type(other).__name__}")
+    # TODO: Inversion
+    # def __pow__(self, other):
+    #     other = simplify(other)
+    #     if isinstance(other, rationalComprehendable):
+    #         other = rational.comprehend(other)
+    #         if type(other.reduce()) is int:
+    #             return rational(
+    #                 numerator=self.numerator ** other,
+    #                 denominator=self.denominator ** other
+    #             )
+    #     else:
+    #         raise TypeError(f"unsupported operand type(s) for **: {type(self).__name__} and {type(other).__name__}")
         
-    def __rpow__(self, other):
-        other = simplify(other)
-        if isinstance(other, rationalComprehendable):
-            other = rational.comprehend(other)
-            from ametrine.library.algebraic import root
-            return simplify(root(
-                radicand=rational(
-                    numerator=other.numerator ** self.numerator,
-                    denominator=other.denominator ** self.denominator
-                ),
-                index=self.denominator
-            ))
-        else:
-            raise TypeError(f"unsupported operand type(s) for /: {type(other).__name__} and {type(self).__name__}")
+    # def __rpow__(self, other):
+    #     other = simplify(other)
+    #     if isinstance(other, rationalComprehendable):
+    #         other = rational.comprehend(other)
+    #         from ametrine.library.algebraic import root
+    #         return simplify(root(
+    #             radicand=rational(
+    #                 numerator=other.numerator ** self.numerator,
+    #                 denominator=other.denominator ** self.denominator
+    #             ),
+    #             index=self.denominator
+    #         ))
+    #     else:
+    #         raise TypeError(f"unsupported operand type(s) for /: {type(other).__name__} and {type(self).__name__}")
 
     def __neg__(self):
         return rational(
