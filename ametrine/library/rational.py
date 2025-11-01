@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from typing import TypeAlias
 
 from math import gcd, frexp
 
@@ -14,7 +15,7 @@ class rational(ExactNumber):
     
     Supported Magic
     --------
-    - `+`, `-`, `*`, `/` for all `rational` numbers
+    - `+`, `-`, `*`, `/` for all `rational` and `rationalComprehendable` numbers
     - `**` as long as the exponent is an integer
     - `==`, `<`, `>`, `<=`, `>=`, 
     """
@@ -23,7 +24,7 @@ class rational(ExactNumber):
 
     def __post_init__(self) -> None:
         if not isinstance(self.numerator, int) or not isinstance(self.denominator, int):
-            raise TypeError
+            raise TypeError("Please ensure to instantiate `raional` type only with integers")
 
         if self.denominator == 0:
             raise ValueError("Denominator can't be zero")
@@ -40,12 +41,22 @@ class rational(ExactNumber):
         """
         Don't use floats that are meant to be periodically or are longer than 16 decimals
         <br>floats lose accuracy after 16 decimals
+
+        Supported Types
+        ---------
+            **int** : No restrictions<br>
+            **float** : Floats can loose accuracy after only a few decimals, thus they will be rounded to 15 decimals places<br>
+            **str** : Has to be in the format `f"{whole}.{fraction}"`, whereby `whole` and `fraction` are consecutive digits
+
+        Raises
+        ---------
+        TypeError : If it is not known how to express the given object as a rational 
         """
         if isinstance(obj, int):
             return cls(obj, 1)
         elif isinstance(obj, float):
-            n, d = float_to_rational(obj)
-            return cls(n, d)
+            n, d = rational_parts_from_float(obj)
+            return cls(n, d).round(15)
         elif isinstance(obj, rational):
             return cls(obj.numerator, obj.denominator)
         elif isinstance(obj, str):
@@ -64,25 +75,28 @@ class rational(ExactNumber):
         return f"{self.numerator}/{self.denominator}"
     
     def reduce(self) -> int | None:
+        "Returns the rational as an `int` if it is whole, else `None`."
         if self.denominator == 1:
             return self.numerator
         return None
     
     def reciproke(self) -> rational:
+        "Returns a new instance of the rational, whereby its numerator and denominator are swapped."
         return rational(
             numerator=self.denominator,
             denominator=self.numerator
         )
 
-    def round(self, to_decimals: int) -> rational:
+    def round(self, precision: int) -> rational:
+        "Returns a new instance of the rational, rounded to `precision` decimals."
         whole, non_repeating, repeating = self.to_decimal_parts()
-        decimals = "".join([str(d) for d in non_repeating]) + "".join([str(d) for d in repeating]) * (to_decimals + 1)
-        if to_decimals >= len(decimals):
+        decimals = "".join([str(d) for d in non_repeating]) + "".join([str(d) for d in repeating]) * (precision + 1)
+        if precision >= len(decimals):
             return rational(self.numerator, self.denominator)
 
-        nDecimals = decimals[:to_decimals]
+        nDecimals = decimals[:precision]
 
-        if int(decimals[to_decimals]) >= 5:
+        if int(decimals[precision]) >= 5:
 
             nDecimals_list = list(nDecimals)
             nDecimals_list[-1] = str(int(nDecimals_list[-1]) + 1)
@@ -91,13 +105,9 @@ class rational(ExactNumber):
         return rational.comprehend(str(whole) + "." + nDecimals)
     
     def __add__(self, other):
-        other = simplify(other)
         if isinstance(other, rationalComprehendable):
             other = rational.comprehend(other)
-            return rational(
-                numerator=self.numerator * other.denominator + other.numerator * self.denominator,
-                denominator=self.denominator * other.denominator
-            )
+            return rational(numerator=self.numerator * other.denominator + other.numerator * self.denominator, denominator=self.denominator * other.denominator)
         else:
             raise NotImplementedError(f"unsupported operand type(s) for +: {type(self).__name__} and {type(other).__name__}")
                 
@@ -162,33 +172,35 @@ class rational(ExactNumber):
         else:
             raise TypeError(f"unsupported operand type(s) for /: {type(other).__name__} and {type(self).__name__}")
         
-    # TODO: Inversion
-    # def __pow__(self, other):
-    #     other = simplify(other)
-    #     if isinstance(other, rationalComprehendable):
-    #         other = rational.comprehend(other)
-    #         if type(other.reduce()) is int:
-    #             return rational(
-    #                 numerator=self.numerator ** other,
-    #                 denominator=self.denominator ** other
-    #             )
-    #     else:
-    #         raise TypeError(f"unsupported operand type(s) for **: {type(self).__name__} and {type(other).__name__}")
+    def __pow__(self, other):
+        other = simplify(other)
+        if isinstance(other, rationalComprehendable):
+            other = rational.comprehend(other)
+            if other.reduce() is not None:
+                r = rational(
+                    numerator=self.numerator ** abs(other.reduce()),
+                    denominator=self.denominator ** abs(other.reduce())
+                )
+                return r if not other.is_negative else r.reciproke()
+            else:
+                raise NotImplementedError
+        else:
+            raise TypeError(f"unsupported operand type(s) for **: {type(self).__name__} and {type(other).__name__}")
         
-    # def __rpow__(self, other):
-    #     other = simplify(other)
-    #     if isinstance(other, rationalComprehendable):
-    #         other = rational.comprehend(other)
-    #         from ametrine.library.algebraic import root
-    #         return simplify(root(
-    #             radicand=rational(
-    #                 numerator=other.numerator ** self.numerator,
-    #                 denominator=other.denominator ** self.denominator
-    #             ),
-    #             index=self.denominator
-    #         ))
-    #     else:
-    #         raise TypeError(f"unsupported operand type(s) for /: {type(other).__name__} and {type(self).__name__}")
+    def __rpow__(self, other):
+        other = simplify(other)
+        if isinstance(other, rationalComprehendable):
+            other = rational.comprehend(other)
+            if other.reduce() is not None:
+                r = rational(
+                    numerator=self.numerator ** abs(other.reduce()),
+                    denominator=self.denominator ** abs(other.reduce())
+                )
+                return r if not other.is_negative else r.reciproke()
+            else:
+                raise NotImplementedError
+        else:
+            raise TypeError(f"unsupported operand type(s) for **: {type(self).__name__} and {type(other).__name__}")
 
     def __neg__(self):
         return rational(
@@ -227,7 +239,7 @@ class rational(ExactNumber):
         return len(self.to_decimal_parts()[-1]) != 0
     
     def to_decimal_parts(self) -> tuple[int, list[Digit], list[Digit]]:
-        "Can have leading zeros!"
+        "Expresses the rational as a tuple of the whole part, the non-repeating decimals as a list and the repeating decimals as a list."
         integer_part = self.numerator // self.denominator
         remainder = abs(self.numerator % self.denominator)
 
@@ -258,14 +270,9 @@ class rational(ExactNumber):
         while non_repeating and non_repeating[-1] == 0 and not repeating:
             non_repeating.pop()
 
-        return (
-            integer_part,
-            non_repeating,
-            repeating
-        )
-
-
-def float_to_rational(f: float):
+        return (integer_part, non_repeating, repeating)
+    
+def rational_parts_from_float(f: float) -> tuple[int, int]:
     if f == 0.0:
         return (0, 1)
     m, e = frexp(f)
@@ -280,4 +287,4 @@ def float_to_rational(f: float):
     g = gcd(numerator, denominator)
     return (numerator // g, denominator // g)
 
-rationalComprehendable = int | float | rational | str
+rationalComprehendable: TypeAlias = int | float | str | rational

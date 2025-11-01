@@ -2,6 +2,10 @@ from __future__ import annotations
 
 class ExactNumber:
 
+    def __setattr__(self, name, value):
+        if name in ["denominator", "numerator", "index", "coefficients"]:
+            raise Exception(f"{type(self).__name__} is immutable")
+
     def reduce(self) -> ExactNumber | int | None:
         raise NotImplementedError
 

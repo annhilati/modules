@@ -15,3 +15,14 @@
 - Comprehension
 
 Wann typen wie weit vereinfachen?
+
+
+
+
+# Zahlen
+## Rationale Zahl
+- Darstellbar durch Division zweier Ganzzahlen
+## Algebraische Zahl
+- Darsellbar als eine Lösung eines Polynoms mit rationalen Koeffizienten
+## Radikale Zahlen
+- Darstellbar durch einen Wurzelausdruck

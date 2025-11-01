@@ -1,6 +1,8 @@
 from typing import TypeVar, Callable, Any
 
-from ametrine.library.numeric import Numeric
+from math import frexp, gcd
+
+from ametrine.library.numeric import ExactNumber
 
 sourceType = TypeVar("sourceType")
 convertedType = TypeVar("convertedType")
@@ -16,7 +18,7 @@ simplifyer: dict[sourceType, tuple[Callable[[sourceType], bool], Callable[[sourc
     )
 }
 
-def simplify(obj: Numeric | float | int | Any) -> Numeric | int | Any:
+def simplify(obj: ExactNumber | float | int | Any) -> ExactNumber | int | Any:
     """Vereinfacht ein Objekt so weit wie möglich."""
     input = obj
 
@@ -25,7 +27,7 @@ def simplify(obj: Numeric | float | int | Any) -> Numeric | int | Any:
     while type(current) != type(last):
         last = current
 
-        if isinstance(current, Numeric):
+        if isinstance(current, ExactNumber):
             if current.reduce() is not None:
                 current = current.reduce()
 
@@ -39,3 +41,4 @@ def simplify(obj: Numeric | float | int | Any) -> Numeric | int | Any:
 
 
     return current
+
