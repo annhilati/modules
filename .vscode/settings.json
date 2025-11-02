@@ -10,7 +10,8 @@
         ".vscode": true,
         "ametrine/__pycache__": true,
         "ametrine/library/__pycache__": true,
-        "ametrine/calc/__pycache__": true
+        "ametrine/calc/__pycache__": true,
+        "__pycache__": true
     },
     "hide-files.files": [
         "blackholepy/physics/__pycache__",
@@ -18,7 +19,8 @@
         ".vscode",
         "ametrine/__pycache__",
         "ametrine/library/__pycache__",
-        "ametrine/calc/__pycache__"
+        "ametrine/calc/__pycache__",
+        "__pycache__"
     ],
     "python-envs.defaultEnvManager": "ms-python.python:system",
     "python-envs.pythonProjects": []
