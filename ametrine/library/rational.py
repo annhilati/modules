@@ -9,7 +9,7 @@ from ametrine.ausgelagert import simplify
 from ametrine.typing import Digit
 
 
-@dataclass
+@dataclass(repr=False)
 class rational(ExactNumber):
     """Type, storing a rational number, meaning that it is arithmetically displayable by an division of two integers.
     
@@ -17,7 +17,7 @@ class rational(ExactNumber):
     --------
     - `+`, `-`, `*`, `/` for all `rational` and `rationalComprehendable` numbers
     - `**` as long as the exponent is an integer
-    - `==`, `<`, `>`, `<=`, `>=`, 
+    - `==`, `<`, `>`, `<=`, `>=`
     """
     numerator:      int
     denominator:    int = 1
@@ -69,13 +69,12 @@ class rational(ExactNumber):
         else:
             raise TypeError(f"Cannot convert type to 'rational': '{type(obj).__name__}'")
 
-    def __repr__(self) -> str:
+    def _repr(self) -> str:
         if self.denominator == 1:
             return str(self.numerator)
         return f"{self.numerator}/{self.denominator}"
     
     def reduce(self) -> int | None:
-        "Returns the rational as an `int` if it is whole, else `None`."
         if self.denominator == 1:
             return self.numerator
         return None
@@ -176,10 +175,10 @@ class rational(ExactNumber):
         other = simplify(other)
         if isinstance(other, rationalComprehendable):
             other = rational.comprehend(other)
-            if other.reduce() is not None:
+            if other.eval() is not None:
                 r = rational(
-                    numerator=self.numerator ** abs(other.reduce()),
-                    denominator=self.denominator ** abs(other.reduce())
+                    numerator=self.numerator ** abs(other.eval()),
+                    denominator=self.denominator ** abs(other.eval())
                 )
                 return r if not other.is_negative else r.reciproke()
             else:
@@ -191,10 +190,10 @@ class rational(ExactNumber):
         other = simplify(other)
         if isinstance(other, rationalComprehendable):
             other = rational.comprehend(other)
-            if other.reduce() is not None:
+            if other.eval() is not None:
                 r = rational(
-                    numerator=self.numerator ** abs(other.reduce()),
-                    denominator=self.denominator ** abs(other.reduce())
+                    numerator=self.numerator ** abs(other.eval()),
+                    denominator=self.denominator ** abs(other.eval())
                 )
                 return r if not other.is_negative else r.reciproke()
             else:

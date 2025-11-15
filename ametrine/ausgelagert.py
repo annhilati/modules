@@ -28,8 +28,8 @@ def simplify(obj: ExactNumber | float | int | Any) -> ExactNumber | int | Any:
         last = current
 
         if isinstance(current, ExactNumber):
-            if current.reduce() is not None:
-                current = current.reduce()
+            if current.eval() is not None:
+                current = current.eval()
 
         elif type(current) in simplifyer:
             if simplifyer[type(current)][0](current):

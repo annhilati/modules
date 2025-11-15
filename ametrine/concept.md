@@ -26,3 +26,8 @@ Wann typen wie weit vereinfachen?
 - Darsellbar als eine Lösung eines Polynoms mit rationalen Koeffizienten
 ## Radikale Zahlen
 - Darstellbar durch einen Wurzelausdruck
+
+
+
+
+# 

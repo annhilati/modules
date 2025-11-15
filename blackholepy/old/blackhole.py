@@ -5,14 +5,15 @@ import re as regex
 
 from sympy import sqrt, Equality, solve, Expr
 
-from blackholepy import formulas, config
-from blackholepy.formulas import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric, approx
+from blackholepy import config
+from blackholepy.calculation import metrics
+from blackholepy.calculation.metrics import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric, approx
 from blackholepy.symbols import *
 from blackholepy.exceptions import *
 
 def spin_param(spin: float, mass: float) -> float:
     "Calculate a black holes spin from its spin parameter"
-    return calculate(formulas.dimensionless_spin, {a_star: spin, M: mass}, a)
+    return calculate(metrics.dimensionless_spin, {a_star: spin, M: mass}, a)
 
 @dataclass
 class BlackHole():
@@ -137,7 +138,7 @@ class BlackHole():
                 warnings.warn("Penrose process would overshoot: J < 0 — limiting to Schwarzschild.")
             J_final = 0.0
 
-        self.spin = self._calc_property(formulas.spin_momentum, a, overwrite={J: J_final})
+        self.spin = self._calc_property(metrics.spin_momentum, a, overwrite={J: J_final})
         self.mass = self._calc_property(Equality(M, sqrt(M_irr**2 + (J_final**2 * c**2) / (4 * G**2 * M_irr**2))), M)
 
 
@@ -166,12 +167,12 @@ class BlackHole():
     @property
     def angular_momentum(self) -> Expr:
         "Angular momentum of the black hole"
-        return self._calc_property(formulas.spin_momentum, J)
+        return self._calc_property(metrics.spin_momentum, J)
     
     @property
     def dimless_spin(self) -> Expr:
         ""
-        return self._calc_property(formulas.dimensionless_spin, a_star)
+        return self._calc_property(metrics.dimensionless_spin, a_star)
     
     @property
     def horizons(self) -> tuple[Expr, Expr | None]:
@@ -232,7 +233,7 @@ class BlackHole():
     def irreducible_mass(self) -> Expr:
         "Gravitational mass of the black hole that isn't a side effect of spin or charge"
         # raise FaultyImplementation("Can't be calculated because float precision")
-        return self._calc_property(formulas.irreducable_mass, M_irr)
+        return self._calc_property(metrics.irreducable_mass, M_irr)
     
     @property
     def reducable_mass(self) -> Expr:
