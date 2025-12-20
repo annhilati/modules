@@ -24,7 +24,7 @@ class BlackHole():
     mass : kilogram as float
     spin : meter as float
         The Metric required here is the 'Kerr-parameter' *a*, messured in meters.<br>
-        Not to be confused with the spin parameter *a*<sub>*</sub> (between 0 and 1) or the angular momentum *J* (in kg m^2 / s).
+        Not to be confused with the spin parameter *a*<sub>*</sub> (between 0 and 1) or the angular momentum *J* (in kg·m²/s).
     charge : coloumb as float
 
     Raises
@@ -41,9 +41,9 @@ class BlackHole():
     fix_metric: bool        = field(init=False, default=False)
 
     def __post_init__(self):
-        # self.mass = Float(self.mass, config.float_precision)
-        # self.spin = Float(self.spin, config.float_precision)
-        # self.charge = Float(self.charge, config.float_precision)
+        self.mass   = Rational(self.mass)
+        self.spin   = Rational(self.spin)
+        self.charge = Rational(self.charge)
 
         if self.mass < 0:
             raise LawOfConservationOfEnergy(f"Negative mass contradicts the general theory of relativity.")
@@ -114,7 +114,7 @@ class BlackHole():
         if seconds > self.evaporation_time:
             target_time = 0
             if warn_on_evaporation:
-                warnings.warn(f"The black hole evaporated in the process of advancing {seconds} seconds (after ~{(100 * self.evaporation_time / seconds):.2f}%).")
+                warnings.warn(f"The black hole evaporated in the process of advancing {seconds} seconds (after ~{(100 * self.evaporation_time / seconds):.4f}%).")
         else:
             target_time = self.evaporation_time - seconds
 
@@ -122,27 +122,28 @@ class BlackHole():
 
         # Calculations for spin and charge missing
 
-    def penrose_process(self, delta_J: float, /, warn_on_extremal: bool = True) -> None:
-        """Applies a Penrose-like rotational energy extraction by reducing the spin angular momentum J.
+    def penrose_process(self, delta_J: Rational, /, warn_on_extremal: bool = True) -> None:
+        """Applies a Penrose-like rotational energy extraction by reducing the spin angular momentum *J*.
 
         Parameters
         ----------
-        delta_J : float
-            The amount of angular momentum to remove (in SI units, kg·m²/s).
-        warn_on_extremal : bool, optional
-            Warn if process would push the black hole below Schwarzschild limit (a < 0).
+        delta_J : kg·m²/s as float
+            The amount of angular momentum to remove.
+        warn_on_extremal : bool
+            Warn if the process reduces the black hole to the Schwarzschild metric.
         """
 
         J_initial = self.angular_momentum
 
-        J_final = J_initial - delta_J
+        J_final = J_initial - Rational(delta_J)
         if J_final < 0:
-            if warn_on_extremal:
-                warnings.warn("Penrose process would overshoot: J < 0 — limiting to Schwarzschild.")
             J_final = 0.0
+            if warn_on_extremal:
+                warnings.warn(f"The black holes angular momentum is just {J_initial.n(config.float_precision)} kg·m²/s (≳ {((100 * Rational(delta_J) / J_initial) - 100):.2f}% too much to extract). The remaining penrose process is discarded and the black hole was reduced to the Schwarzschild metric.")
 
         self.spin = self._calc_property(formulas.spin_momentum, a, overwrite={J: J_final})
         self.mass = self._calc_property(Equality(M, sqrt(M_irr**2 + (J_final**2 * c**2) / (4 * G**2 * M_irr**2))), M)
+        self._evaluate_metric()
 
 
     def feed(self, mass: float, /) -> None:
