@@ -104,17 +104,17 @@ class BlackHole():
         return calculate(eq=eq, values=values, unknown=unknown, mode="single")
 
 
-    def advance_time(self, timespan: timedelta, /, warn_on_evaporation: bool = True) -> None:
+    def advance_time(self, seconds: Rational, /, warn_on_evaporation: bool = True) -> None:
         """Reevaluates the properties of the black hole as if `timespan` time had passed.<br>
         This will reduce it's mass due to hawking radiation.
         """
-        seconds = timespan.total_seconds()
+        seconds = Rational(seconds)
 
         # Hawking Radiation
         if seconds > self.evaporation_time:
             target_time = 0
             if warn_on_evaporation:
-                warnings.warn(f"The black hole evaporated in the process of advancing {seconds} seconds (after ~{(100 * self.evaporation_time / seconds):.4f}%).")
+                warnings.warn(f"The black hole evaporated in the process of advancing {seconds} seconds (after ~{(100 * self.evaporation_time / seconds):.4f}% of the time).")
         else:
             target_time = self.evaporation_time - seconds
 

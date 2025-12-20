@@ -1,4 +1,4 @@
-from sympy import Equality, sqrt, solve, Symbol, Expr
+from sympy import Equality, sqrt, solve, Symbol, Expr, Integral
 from dataclasses import dataclass
 from typing import Literal
 
@@ -43,7 +43,7 @@ ReissnerNordströmMetric = BlackHoleMetric(
     horizon_area            = Equality(A, 4 * pi * r_plus**2),
     hawking_temperature     = Equality(T_H, ((ℏ * c**3) / (2 * pi * k_B * G * M)) * sqrt(1 - ((Q**2 * G) / (4 * pi * ε_0 * c**4 * M**2)))),
     hawking_power           = ...,
-    evaporation_time        = ...
+    evaporation_time        = ... # Equality(τ, Integral())
 )
 
 KerrMetric = BlackHoleMetric(
