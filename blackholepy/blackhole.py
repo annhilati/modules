@@ -3,17 +3,17 @@ from datetime import timedelta
 import warnings
 import re as regex
 
-from sympy import sqrt, Equality, solve, Expr
+from sympy import sqrt, Equality, solve, Expr, Rational, N
 
 from blackholepy import config
-from blackholepy.calculation import metrics
-from blackholepy.calculation.metrics import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric, approx
+from blackholepy import formulas
+from blackholepy.formulas import calculate, BlackHoleMetric, KerrMetric, KerrNewmanMetric, SchwarzschildMetric, ReissnerNordströmMetric, approx
 from blackholepy.symbols import *
 from blackholepy.exceptions import *
 
 def spin_param(spin: float, mass: float) -> float:
     "Calculate a black holes spin from its spin parameter"
-    return calculate(metrics.dimensionless_spin, {a_star: spin, M: mass}, a)
+    return calculate(formulas.dimensionless_spin, {a_star: spin, M: mass}, a)
 
 @dataclass
 class BlackHole():
@@ -33,9 +33,9 @@ class BlackHole():
     LawOfConservationOfEnergy : If parameters cause behavior that would destroy energy or create it out of nothing
     """
         
-    mass:   Float
-    spin:   Float           = 0
-    charge: Float           = 0
+    mass:   Expr
+    spin:   Expr               = 0
+    charge: Expr               = 0
     metric: BlackHoleMetric = field(init=False)
     "Collection of formulas that descripe the black holes properties"
     fix_metric: bool        = field(init=False, default=False)
@@ -56,6 +56,9 @@ class BlackHole():
 
         self._evaluate_metric()
 
+    def __repr__(self):
+        return f"BlackHole(M={N(self.mass, config.float_precision)}, a={N(self.spin, config.float_precision)}, Q={N(self.charge, config.float_precision)})"
+    
     def _evaluate_metric(self) -> None:
         if not self.fix_metric:
             if   not self.spins and not self.charged:
@@ -67,7 +70,7 @@ class BlackHole():
             elif     self.spins and     self.charged:
                 self.metric = KerrNewmanMetric
 
-    def _calc_property(self, eq: Equality, unknown: Symbol, overwrite: dict[Symbol, float] = {}) -> Expr:
+    def _calc_property(self, eq: Equality, unknown: Symbol, overwrite: dict[Symbol, Rational] = {}) -> Expr:
         "unknown will not be substitued with a known value"
 
         getters = {
@@ -101,7 +104,7 @@ class BlackHole():
         return calculate(eq=eq, values=values, unknown=unknown, mode="single")
 
 
-    def advance_time(self, timespan: timedelta, /, warn_on_evaporation: bool = False) -> None:
+    def advance_time(self, timespan: timedelta, /, warn_on_evaporation: bool = True) -> None:
         """Reevaluates the properties of the black hole as if `timespan` time had passed.<br>
         This will reduce it's mass due to hawking radiation.
         """
@@ -111,7 +114,7 @@ class BlackHole():
         if seconds > self.evaporation_time:
             target_time = 0
             if warn_on_evaporation:
-                warnings.warn(f"The black hole evaporated in the process of advancing {seconds} seconds (after {(100 * self.evaporation_time / seconds):.2f}%).")
+                warnings.warn(f"The black hole evaporated in the process of advancing {seconds} seconds (after ~{(100 * self.evaporation_time / seconds):.2f}%).")
         else:
             target_time = self.evaporation_time - seconds
 
@@ -138,7 +141,7 @@ class BlackHole():
                 warnings.warn("Penrose process would overshoot: J < 0 — limiting to Schwarzschild.")
             J_final = 0.0
 
-        self.spin = self._calc_property(metrics.spin_momentum, a, overwrite={J: J_final})
+        self.spin = self._calc_property(formulas.spin_momentum, a, overwrite={J: J_final})
         self.mass = self._calc_property(Equality(M, sqrt(M_irr**2 + (J_final**2 * c**2) / (4 * G**2 * M_irr**2))), M)
 
 
@@ -157,22 +160,22 @@ class BlackHole():
         return not self.charge == 0
     
     @property
-    def _max_allowed_spin(self) -> float:
+    def _max_allowed_spin(self) -> Expr:
         return self._calc_property(Equality(a, (G * M) / c**2), a)
     
     @property
-    def _max_allowed_charge(self) -> float:
+    def _max_allowed_charge(self) -> Expr:
         return self._calc_property(Equality(Q, sqrt(4 * π * ε_0 * G) * M), Q)
     
     @property
     def angular_momentum(self) -> Expr:
         "Angular momentum of the black hole"
-        return self._calc_property(metrics.spin_momentum, J)
+        return self._calc_property(formulas.spin_momentum, J)
     
     @property
     def dimless_spin(self) -> Expr:
         ""
-        return self._calc_property(metrics.dimensionless_spin, a_star)
+        return self._calc_property(formulas.dimensionless_spin, a_star)
     
     @property
     def horizons(self) -> tuple[Expr, Expr | None]:
@@ -233,7 +236,7 @@ class BlackHole():
     def irreducible_mass(self) -> Expr:
         "Gravitational mass of the black hole that isn't a side effect of spin or charge"
         # raise FaultyImplementation("Can't be calculated because float precision")
-        return self._calc_property(metrics.irreducable_mass, M_irr)
+        return self._calc_property(formulas.irreducable_mass, M_irr)
     
     @property
     def reducable_mass(self) -> Expr:
@@ -266,5 +269,3 @@ class BlackHole():
         
         return value
         
-    def __repr__(self):
-        return f"BlackHole(M={self.mass}, Q={self.charge}, a={self.spin})"

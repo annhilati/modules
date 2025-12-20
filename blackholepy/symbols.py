@@ -1,4 +1,4 @@
-from sympy import Symbol, Float, NumberSymbol, pi, symbols
+from sympy import Symbol, Rational, NumberSymbol, pi, symbols
 from blackholepy import config
 
 # These symbols shall no longer be used a variables for specific Quantities
@@ -22,18 +22,18 @@ V       = Symbol("V")
 
 π:      NumberSymbol = pi
 
-c   = Symbol("c")
-G   = Symbol("G")
-ℏ   = Symbol("ℏ")
-k_B = Symbol("k_B")
-ε_0 = Symbol("ε_0")
+c       = Rational(299792458)
+G       = Rational('6.67430e-11')
+ℏ       = Rational('1.054571817e-34')
+k_B     = Rational('1.380649e-23')
+ε_0     = Rational('8.8541878188e-12')
 
 constants = {
-    c:      Float(299792458),
-    G:      Float('6.67430e-11'),
-    ℏ:      Float('1.054571817e-34'),
-    k_B:    Float('1.380649e-23'),
-    ε_0:    Float('8.8541878188e-12')
+    c:      Rational(299792458),
+    G:      Rational('6.67430e-11'),
+    ℏ:      Rational('1.054571817e-34'),
+    k_B:    Rational('1.380649e-23'),
+    ε_0:    Rational('8.8541878188e-12')
 }
 
 # c:      Float = Float(299792458)            # meter / second                   # exact
@@ -42,8 +42,8 @@ constants = {
 # k_B:    Float = Float('1.380649e-23')       # joule / kelvin                   # exact
 # ε_0:    Float = Float('8.8541878188e-12')   # ampere seconds / volt meter      # not exact
 
-sunmass:        Float = Float('1.989e30',  precision=config.float_precision)             # kilogram
-earthmass:      Float = Float('5.969e24',  precision=config.float_precision)             # kilogram
-moonmass:       Float = Float('7.346e11',  precision=config.float_precision)             # kilogram
-sagitariusmass: Float = Float('4_300_000', precision=config.float_precision) * sunmass  # kilogram
-ton618mass:     Float = Float('6.600e11' , precision=config.float_precision) * sunmass  # kilogram
+sunmass:        Rational = Rational('1.989e30')             # kilogram
+earthmass:      Rational = Rational('5.969e24')             # kilogram
+moonmass:       Rational = Rational('7.346e11')             # kilogram
+sagitariusmass: Rational = Rational('4_300_000') * sunmass  # kilogram
+ton618mass:     Rational = Rational('6.600e11') * sunmass  # kilogram
