@@ -11,7 +11,7 @@ class BlackHoleMetric():
     
     name:                str
     r_plus:              Equality
-    r_minus:             Equality | None
+    r_minus:             Equality
     surface_gravity:     Equality
     horizon_area:        Equality
     hawking_temperature: Equality
@@ -27,7 +27,7 @@ class BlackHoleMetric():
 SchwarzschildMetric = BlackHoleMetric(
     name                    = "Schwarzschild metric",
     r_plus                  = Equality(r_plus, (2 * G * M) / c**2),
-    r_minus                 = None,
+    r_minus                 = Equality(r_minus, (2 * G * M) / c**2),
     surface_gravity         = Equality(κ, c**4 / (4 * G * M)),
     horizon_area            = Equality(A, 4 * pi * r_plus**2),
     hawking_temperature     = Equality(T_H, (ℏ * κ) / (2 * pi * k_B * c)),

@@ -122,15 +122,8 @@ class BlackHole():
 
         # Calculations for spin and charge missing
 
-    def penrose_process(self, delta_J: Rational, /, warn_on_extremal: bool = True) -> None:
+    def penrose_process(self, delta_J: Rational, /, warn_on_metric_change: bool = True) -> None:
         """Applies a Penrose-like rotational energy extraction by reducing the spin angular momentum *J*.
-
-        Parameters
-        ----------
-        delta_J : kg·m²/s as float
-            The amount of angular momentum to remove.
-        warn_on_extremal : bool
-            Warn if the process reduces the black hole to the Schwarzschild metric.
         """
 
         J_initial = self.angular_momentum
@@ -138,7 +131,7 @@ class BlackHole():
         J_final = J_initial - Rational(delta_J)
         if J_final < 0:
             J_final = 0.0
-            if warn_on_extremal:
+            if warn_on_metric_change:
                 warnings.warn(f"The black holes angular momentum is just {J_initial.n(config.float_precision)} kg·m²/s (≳ {((100 * Rational(delta_J) / J_initial) - 100):.2f}% too much to extract). The remaining penrose process is discarded and the black hole was reduced to the Schwarzschild metric.")
 
         self.spin = self._calc_property(formulas.spin_momentum, a, overwrite={J: J_final})

@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational, NumberSymbol, pi, symbols
+from sympy import Symbol, Rational, NumberSymbol, pi
 from blackholepy import config
 
 # These symbols shall no longer be used a variables for specific Quantities
@@ -35,12 +35,6 @@ constants = {
     k_B:    Rational('1.380649e-23'),
     ε_0:    Rational('8.8541878188e-12')
 }
-
-# c:      Float = Float(299792458)            # meter / second                   # exact
-# G:      Float = Float('6.67430e-11')        # meter^3 / (kilogram second^2)    # not exact
-# ℏ:      Float = Float('1.054571817e-34')    # joule seconds                    # exact
-# k_B:    Float = Float('1.380649e-23')       # joule / kelvin                   # exact
-# ε_0:    Float = Float('8.8541878188e-12')   # ampere seconds / volt meter      # not exact
 
 sunmass:        Rational = Rational('1.989e30')             # kilogram
 earthmass:      Rational = Rational('5.969e24')             # kilogram
