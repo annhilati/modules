@@ -1,5 +1,5 @@
-from typing import Callable, Any, get_args, get_origin, get_type_hints, overload
-import functools, inspect
+from typing import Callable, Any, get_args, get_origin, get_type_hints, overload, Iterable, Union
+import functools, inspect, types
 
 class DSLMeta(type):
 
@@ -78,20 +78,62 @@ class Decorator:
         return self._make_wrapper(func, self.kwargs)
 
     @staticmethod
-    def _make_wrapper[**P, R](func: Callable[P, R], deco_kwargs: dict[str]) -> Callable[P, R]:
+    def _make_wrapper[**P, R](func: Callable[P, R], deco_kwargs: dict[str, Any]) -> Callable[P, R]:
         sig = inspect.signature(func)
         hints = get_type_hints(func)
+
+        def parse_value(val: Any, hint: Any) -> Any:
+            """Rekursive Logik zur Typ-Konvertierung basierend auf DSLType."""
+            origin = get_origin(hint)
+            args = get_args(hint)
+
+            # 1. Handle Union Types (z.B. int | DSLType oder Union[int, str])
+            if origin is Union or (isinstance(hint, types.UnionType) if hasattr(types, "UnionType") else False):
+                for arg in args:
+                    try:
+                        # Wir versuchen den Wert gegen jeden Typ in der Union zu parsen
+                        return parse_value(val, arg)
+                    except (TypeError, ValueError):
+                        continue
+                return val # Falls nichts passt, Originalwert
+
+            # 2. Handle DSLType Subklassen ◄── Das Herzstück
+            if isinstance(hint, type) and issubclass(hint, DSLType):
+                return hint.parse(val)
+
+            # 3. Rekursive Container-Prüfung
+            try:
+                if origin is list and args:
+                    return [parse_value(v, args[0]) for v in val]
+                
+                if origin is set and args:
+                    return {parse_value(v, args[0]) for v in val}
+                
+                if origin is tuple and args:
+                    # Variadische Tupel: tuple[T, ...]
+                    if len(args) == 2 and args[1] is Ellipsis:
+                        return tuple(parse_value(v, args[0]) for v in val)
+                    # Fixe Tupel: tuple[T1, T2]
+                    return tuple(parse_value(v, a) for v, a in zip(val, args))
+                
+                if origin is dict and args:
+                    k_hint, v_hint = args
+                    return {parse_value(k, k_hint): parse_value(v, v_hint) for k, v in val.items()}
+            except (TypeError, Iterable): # Falls val nicht iterierbar ist, obwohl der Hint es sagt
+                return val
+
+            return val
 
         @functools.wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             bound = sig.bind(*args, **kwargs)
             bound.apply_defaults()
-
-            for name, value in list(bound.arguments.items()):
-                ann = hints.get(name)
-                # DSLType ist hier als Platzhalter für deine Basisklasse gedacht
-                if isinstance(ann, type) and issubclass(ann, DSLType):
-                    bound.arguments[name] = ann.parse(value, **deco_kwargs)
+            
+            # Iteriere über alle gebundenen Argumente und wende parse_value an
+            for name, value in bound.arguments.items():
+                if name in hints:
+                    # Ersetze das Argument durch das geparste Ergebnis ➔
+                    bound.arguments[name] = parse_value(value, hints[name])
 
             return func(*bound.args, **bound.kwargs)
 
