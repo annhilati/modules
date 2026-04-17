@@ -68,12 +68,16 @@ class DSLType(metaclass=DSLMeta):
 # │                                   Decorator                                   │ 
 # ╰───────────────────────────────────────────────────────────────────────────────╯
     
-class Decorator:
+class DSLMethod:
+    """Use this decorator on functions to automatically resolve arguments annotated by a `DSLType`. 
+    
+    **NOTE:** Add description on what happens when using multiple DSLTypes alternatively
+    """
      
     @overload # Overload 1: Benutzung ohne Klammern -> @Decorator
     def __new__[**P, R](cls, func: Callable[P, R]) -> Callable[P, R]: ...
     @overload # Overload 2: Benutzung mit Klammern -> @Decorator(key=...)
-    def __new__(cls, func: None = None, **kwargs: Any) -> "Decorator": ...
+    def __new__(cls, func: None = None, **kwargs: Any) -> "DSLMethod": ...
 
     def __new__(cls, func=None, **kwargs):
         if callable(func) and not kwargs:
@@ -98,7 +102,7 @@ class Decorator:
             args = get_args(hint)
 
             # 1. Handle Union Types (z.B. int | DSLType oder Union[int, str])
-            if origin is Union or (isinstance(hint, types.UnionType) if hasattr(types, "UnionType") else False):
+            if origin is Union or isinstance(hint, types.UnionType):
                 for arg in args:
                     try:
                         # Wir versuchen den Wert gegen jeden Typ in der Union zu parsen
