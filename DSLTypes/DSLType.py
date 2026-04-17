@@ -1,3 +1,13 @@
+"""
+DSL types are a special kind of typing types that come with tooling for automatic parsing of arguments in functions.
+
+Essentially, they are like typing with Unions, but:
+1. with the help of a decorator, functions where a DSLtype is used in a annotation, the argument value will be coherced in a way defined by the user
+2. IDE will display only coherce types attributes
+
+"""
+
+
 from typing import Callable, Any, get_args, get_origin, get_type_hints, overload, Iterable, Union
 import functools, inspect, types
 
