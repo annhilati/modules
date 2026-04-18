@@ -7,7 +7,7 @@ Essentially, they are like typing with Unions, but:
 
 """
 
-from typing import Callable, Any, get_args, get_origin, get_type_hints, overload, Iterable, Union
+from typing import Callable, Any, get_args, get_origin, get_type_hints, overload, Union
 import functools, inspect, types
 
 class DSLTypeMeta(type):
@@ -15,9 +15,17 @@ class DSLTypeMeta(type):
     @property
     def _dsl_result_type(cls) -> type | None:
         "Returns the type used in the DSLType for attribute suggestions. During the registration of generic classes, None can be returned."
+        from typing import Generic, get_origin
+        
         bases = type.__getattribute__(cls, "__bases__")
-        if len(bases) > 1:
-            return bases[1]
+        
+        for base in bases:
+            if base.__name__ == "DSLType":
+                continue
+            if base is Generic or get_origin(base) is Generic:
+                continue                
+            return base
+            
         return None
 
     def __getattribute__(cls, name: str):
@@ -52,7 +60,7 @@ class DSLType(metaclass=DSLTypeMeta):
     class number(DSLType, float):
     
         @classmethod
-        def unify(cls, v: int | float | str, **kwargs) -> float:
+        def unify(cls, v: int | float | str, *, kwarg, **kwargs) -> float:
             return float(v)
     ```
     
@@ -61,11 +69,12 @@ class DSLType(metaclass=DSLTypeMeta):
     The method is a `classmethod`, takes the implicit `cls` argument, one
     positional argument, any named keyword arguments and **must contain
     the variadic keyword arguments**.
-    The result type should always be the same as the second base class argument
-    of the class (raising exceptions is permitted and preferred over returning
+    The result type should always be the same as the second class argument of
+    the class (raising exceptions is permitted and preferred over returning
     `None`).
-     
-        TODO: Add a check of the unify method's typing when initializing a subclass 
+    
+    When using `cls.unify()` recursively in your definition, make sure to pass
+    along all arguments.
     """
     
     @classmethod
@@ -73,24 +82,61 @@ class DSLType(metaclass=DSLTypeMeta):
         raise NotImplementedError
     
     def __new__(cls, *args, **kwargs):
-        raise Exception("DSLType classes cannot be instanciated")
+        raise TypeError("DSLType classes cannot be instanciated")
     
     #======// Definition Validation //===========================================================//
     
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-
-        try:
-            if type(cls._dsl_result_type) is not type:
-                raise
-        except IndexError:
-            raise TypeError("the second argument of the class definition must be a type")
         
+        if cls.__name__ == "DSLType":
+            return
+        
+        #======// Class Arguments //=====================//
+        
+        try:
+            if not isinstance(cls._dsl_result_type, type):
+                raise TypeError
+        except (AttributeError, IndexError, TypeError):
+            raise TypeError(f"The second class argument of DSLType '{cls.__name__}' must be a valid type.")
+        
+        #======// Unify Method Requirements //===========//
+
+        unbound_unify = cls.__dict__.get('unify')
+        
+        if not isinstance(unbound_unify, classmethod):
+            raise TypeError(f"Method '{cls.__name__}.unify' must be decorated with @classmethod.")
+
+        sig = inspect.signature(unbound_unify.__func__)
+        params = list(sig.parameters.values())
+
+        if len(params) < 3:
+            raise TypeError(
+                f"Method '{cls.__name__}.unify' must accept at least 3 arguments: "
+                f"(cls, value, **kwargs). Currently: {[p.name for p in params]}"
+            )
+
+        if params[0].name not in ("cls", "self"):
+            pass 
+
+        if params[1].kind not in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.POSITIONAL_ONLY):
+            raise TypeError(f"The second argument of '{cls.__name__}.unify' must be the positional value to parse.")
+
+        if params[-1].kind != inspect.Parameter.VAR_KEYWORD:
+            raise TypeError(f"Method '{cls.__name__}.unify' must accept variadic keyword arguments (**kwargs) at the end.")
+
+        for i in range(2, len(params) - 1):
+            if params[i].kind != inspect.Parameter.KEYWORD_ONLY:
+                raise TypeError(f"Extra argument '{params[i].name}' in '{cls.__name__}.unify' must be keyword-only (after a '*').")
+
+        #======// Unify Method Definition //=============//
+
         try:
             cls.unify(0)
         except NotImplementedError:
-            raise TypeError(f"Definition of DSLType '{cls.__name__}' must define a method 'unify'")
+            raise TypeError(f"DSLType '{cls.__name__}' must implement a working 'unify' method.")
         except Exception:
+            # Andere Fehler beim Probe-Aufruf (wegen fehlender kwargs) sind okay.
             pass
     
     
@@ -112,7 +158,7 @@ class DSLMethod:
     In most cases, you will want to implement your own decorator for such
     functions (for example, a helper for defining macros, handling context,
     etc.), and use this decorator there. This is especially helpful
-    if you want your decorator to accept specific keyword arguments. The
+    if you want your decorator to display specific keyword arguments. The
     DSLMethod decorator can accept these and pass them along to every call of
     `~.unify()` of `DSLType` subclasses when resolving the arguments.
     """
