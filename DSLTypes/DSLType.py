@@ -2,48 +2,78 @@
 DSL types are a special kind of typing types that come with tooling for automatic parsing of arguments in functions.
 
 Essentially, they are like typing with Unions, but:
-1. with the help of a decorator, functions where a DSLtype is used in a annotation, the argument value will be coherced in a way defined by the user
-2. IDE will display only coherce types attributes
+1. with the help of a decorator, functions where a DSLtype is used in a annotation, the argument value will be unified in a way defined by the user
+2. IDE will display only unify types attributes
 
 """
-
 
 from typing import Callable, Any, get_args, get_origin, get_type_hints, overload, Iterable, Union
 import functools, inspect, types
 
-class DSLMeta(type):
+class DSLTypeMeta(type):
 
     @property
-    def _dsl_result_type_(cls) -> type:
-        return cls.__bases__[1]
-    
-    _allowed = {"__bases__", "_dsl_result_type_", "parse"}
-    # Später so ersetzen, dass alles verboten ist, was in _dsl_result_type_ vorkommt, nicht aber in cls
+    def _dsl_result_type(cls) -> type | None:
+        "Returns the type used in the DSLType for attribute suggestions. During the registration of generic classes, None can be returned."
+        bases = type.__getattribute__(cls, "__bases__")
+        if len(bases) > 1:
+            return bases[1]
+        return None
 
-    def __getattribute__(cls, name):
-        if name not in DSLMeta._allowed:
-            raise AttributeError(f"you mistakenly queried an attribute {name} of a DSLType that belongs to another specific type")
+    def __getattribute__(cls, name: str):
+
+        if name.startswith("__"):
+            return type.__getattribute__(cls, name)
+
+        if name in ("_dsl_result_type", "unify"):
+            return type.__getattribute__(cls, name)
+        
+        res_type = cls._dsl_result_type
+        
+        if res_type is not None:
+
+            if name in dir(res_type) and name not in cls.__dict__:
+                raise AttributeError(
+                    f"Forbidden access: '{name}' belongs to the underlying type '{res_type.__name__}' "
+                    f"and cannot be accessed via the DSLType '{cls.__name__}'."
+                )
+            
         return type.__getattribute__(cls, name)
 
 
-class DSLType(metaclass=DSLMeta):
-    """
+class DSLType(metaclass=DSLTypeMeta):
+    """DSLTypes are typing types that can be used to unify values of arguments
+    annotated with such a type.  
+    Unlike unions (that are used for similar purposes), DSLTypes feature IDE
+    suggestions for only one type (the type values get unified to).
     
     ## Usage
     ```
     class number(DSLType, float):
+    
         @classmethod
-        def parse(cls, v: int | float | str) -> float:
+        def unify(cls, v: int | float | str, **kwargs) -> float:
             return float(v)
     ```
+    
+    ### `unify` Method
+    This method defines how values of annotated arguments are unified.  
+    The method is a `classmethod`, takes the implicit `cls` argument, one
+    positional argument, any named keyword arguments and **must contain
+    the variadic keyword arguments**.
+    The result type should always be the same as the second base class argument
+    of the class (raising exceptions is permitted and preferred over returning
+    `None`).
+     
+        TODO: Add a check of the unify method's typing when initializing a subclass 
     """
     
     @classmethod
-    def parse[V, T](cls, v: V, **kwargs) -> T:
-        raise NotImplementedError("parse method not implemented")
+    def unify[V, T](cls, v: V, **kwargs) -> T:
+        raise NotImplementedError
     
     def __new__(cls, *args, **kwargs):
-        raise Exception("don't instanciate DSLType classes")
+        raise Exception("DSLType classes cannot be instanciated")
     
     #======// Definition Validation //===========================================================//
     
@@ -51,15 +81,15 @@ class DSLType(metaclass=DSLMeta):
         super().__init_subclass__(**kwargs)
 
         try:
-            if type(cls._dsl_result_type_) is not type:
+            if type(cls._dsl_result_type) is not type:
                 raise
         except IndexError:
             raise TypeError("the second argument of the class definition must be a type")
         
         try:
-            cls.parse(0)
+            cls.unify(0)
         except NotImplementedError:
-            raise TypeError("parse method must be implemented")
+            raise TypeError(f"Definition of DSLType '{cls.__name__}' must define a method 'unify'")
         except Exception:
             pass
     
@@ -69,14 +99,27 @@ class DSLType(metaclass=DSLMeta):
 # ╰───────────────────────────────────────────────────────────────────────────────╯
     
 class DSLMethod:
-    """Use this decorator on functions to automatically resolve arguments annotated by a `DSLType`. 
+    """Use this decorator on functions to automatically resolve arguments
+    annotated with a `DSLType`.
     
-    **NOTE:** Add description on what happens when using multiple DSLTypes alternatively
+    Supported nested types are:
+    - `list`, `set`, `tuple` (fixed and variadic)
+    - `dict`
+    - `Union`, `UnionType`: The first applicable DSLType will be used for
+        unification. If they all fail, the first will raise it's exception
+    
+    ## Usage
+    In most cases, you will want to implement your own decorator for such
+    functions (for example, a helper for defining macros, handling context,
+    etc.), and use this decorator there. This is especially helpful
+    if you want your decorator to accept specific keyword arguments. The
+    DSLMethod decorator can accept these and pass them along to every call of
+    `~.unify()` of `DSLType` subclasses when resolving the arguments.
     """
-     
-    @overload # Overload 1: Benutzung ohne Klammern -> @Decorator
+    # TODO: Also implement support for *args
+    @overload # Usage without paratheses (@Decorator)
     def __new__[**P, R](cls, func: Callable[P, R]) -> Callable[P, R]: ...
-    @overload # Overload 2: Benutzung mit Klammern -> @Decorator(key=...)
+    @overload # Usage with parentheses (@Decorator(key=...))
     def __new__(cls, func: None = None, **kwargs: Any) -> "DSLMethod": ...
 
     def __new__(cls, func=None, **kwargs):
@@ -97,25 +140,30 @@ class DSLMethod:
         hints = get_type_hints(func)
 
         def parse_value(val: Any, hint: Any) -> Any:
-            """Rekursive Logik zur Typ-Konvertierung basierend auf DSLType."""
+
             origin = get_origin(hint)
             args = get_args(hint)
 
-            # 1. Handle Union Types (z.B. int | DSLType oder Union[int, str])
+            # 1. Handle Union Types (e.g. int | DSLType oder Union[int, str])
             if origin is Union or isinstance(hint, types.UnionType):
+                first_exception = None
                 for arg in args:
                     try:
-                        # Wir versuchen den Wert gegen jeden Typ in der Union zu parsen
                         return parse_value(val, arg)
-                    except (TypeError, ValueError):
+                    except (TypeError, ValueError, Exception) as e:
+                        if first_exception is None:
+                            first_exception = e
                         continue
-                return val # Falls nichts passt, Originalwert
+                
+                if first_exception:
+                    raise first_exception
+                return val
 
-            # 2. Handle DSLType Subklassen ◄── Das Herzstück
+            # 2. Handle DSLType subclasses
             if isinstance(hint, type) and issubclass(hint, DSLType):
-                return hint.parse(val)
+                return hint.unify(val, **deco_kwargs)
 
-            # 3. Rekursive Container-Prüfung
+            # 3. Recursive container check
             try:
                 if origin is list and args:
                     return [parse_value(v, args[0]) for v in val]
@@ -124,16 +172,17 @@ class DSLMethod:
                     return {parse_value(v, args[0]) for v in val}
                 
                 if origin is tuple and args:
-                    # Variadische Tupel: tuple[T, ...]
+                    # Variadic tupel: tuple[T, ...]
                     if len(args) == 2 and args[1] is Ellipsis:
                         return tuple(parse_value(v, args[0]) for v in val)
-                    # Fixe Tupel: tuple[T1, T2]
+                    # Fixed tupel: tuple[T1, T2]
                     return tuple(parse_value(v, a) for v, a in zip(val, args))
                 
                 if origin is dict and args:
                     k_hint, v_hint = args
                     return {parse_value(k, k_hint): parse_value(v, v_hint) for k, v in val.items()}
-            except (TypeError, Iterable): # Falls val nicht iterierbar ist, obwohl der Hint es sagt
+            
+            except (TypeError): # If val is not iterable, even if the hint says it is
                 return val
 
             return val
@@ -143,10 +192,9 @@ class DSLMethod:
             bound = sig.bind(*args, **kwargs)
             bound.apply_defaults()
             
-            # Iteriere über alle gebundenen Argumente und wende parse_value an
             for name, value in bound.arguments.items():
                 if name in hints:
-                    # Ersetze das Argument durch das geparste Ergebnis ➔
+
                     bound.arguments[name] = parse_value(value, hints[name])
 
             return func(*bound.args, **bound.kwargs)
