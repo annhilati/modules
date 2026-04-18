@@ -113,21 +113,20 @@ class DSLType(metaclass=DSLTypeMeta):
         if len(params) < 3:
             raise TypeError(
                 f"Method '{cls.__name__}.unify' must accept at least 3 arguments: "
-                f"(cls, value, **kwargs). Currently: {[p.name for p in params]}"
+                f"(cls, v, **kwargs). Currently: {[p.name for p in params]}"
             )
 
         if params[0].name not in ("cls", "self"):
             pass 
-
         if params[1].kind not in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.POSITIONAL_ONLY):
-            raise TypeError(f"The second argument of '{cls.__name__}.unify' must be the positional value to parse.")
-
+            raise TypeError(f"The second argument of '{cls.__name__}.unify' must be the positional argument to unify.")
         if params[-1].kind != inspect.Parameter.VAR_KEYWORD:
             raise TypeError(f"Method '{cls.__name__}.unify' must accept variadic keyword arguments (**kwargs) at the end.")
-
         for i in range(2, len(params) - 1):
             if params[i].kind != inspect.Parameter.KEYWORD_ONLY:
                 raise TypeError(f"Extra argument '{params[i].name}' in '{cls.__name__}.unify' must be keyword-only (after a '*').")
+        if sig.return_annotation != cls._dsl_result_type:
+            raise TypeError(f"The result type of '{cls.__name__}.unify' must match the underlying type of '{cls.__name__}' which is '{cls._dsl_result_type.__name__}'")
 
         #======// Unify Method Definition //=============//
 
@@ -136,8 +135,7 @@ class DSLType(metaclass=DSLTypeMeta):
         except NotImplementedError:
             raise TypeError(f"DSLType '{cls.__name__}' must implement a working 'unify' method.")
         except Exception:
-            # Andere Fehler beim Probe-Aufruf (wegen fehlender kwargs) sind okay.
-            pass
+            pass # Other exceptions (because of missing kwargs) are fine for the test call
     
     
 # ╭───────────────────────────────────────────────────────────────────────────────╮
@@ -196,10 +194,9 @@ class DSLMethod:
                 for arg in args:
                     try:
                         return parse_value(val, arg)
-                    except (TypeError, ValueError, Exception) as e:
+                    except Exception as e:
                         if first_exception is None:
                             first_exception = e
-                        continue
                 
                 if first_exception:
                     raise first_exception
